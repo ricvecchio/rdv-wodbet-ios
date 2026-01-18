@@ -6,8 +6,14 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		0C87CB212F1D9212005DAAA3 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 0C87CB202F1D9212005DAAA3 /* FirebaseAuth */; };
+		0C87CB232F1D9212005DAAA3 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 0C87CB222F1D9212005DAAA3 /* FirebaseCore */; };
+		0C87CB252F1D9212005DAAA3 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 0C87CB242F1D9212005DAAA3 /* FirebaseFirestore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
-		0CA0DFDF2F1D6139000AD368 /* rdvwodbet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = rdvwodbet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0CA0DFDF2F1D6139000AD368 /* rdvwodbet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = rdvwodbet.app; path = "/Users/ricardodelvecchio/Projetos/App IOS - RDV WODBet /rdvwodbet/build/Debug-iphoneos/rdvwodbet.app"; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -23,6 +29,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0C87CB232F1D9212005DAAA3 /* FirebaseCore in Frameworks */,
+				0C87CB212F1D9212005DAAA3 /* FirebaseAuth in Frameworks */,
+				0C87CB252F1D9212005DAAA3 /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -33,16 +42,7 @@
 			isa = PBXGroup;
 			children = (
 				0CA0DFE12F1D6139000AD368 /* rdvwodbet */,
-				0CA0DFE02F1D6139000AD368 /* Products */,
 			);
-			sourceTree = "<group>";
-		};
-		0CA0DFE02F1D6139000AD368 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				0CA0DFDF2F1D6139000AD368 /* rdvwodbet.app */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -65,6 +65,9 @@
 			);
 			name = rdvwodbet;
 			packageProductDependencies = (
+				0C87CB202F1D9212005DAAA3 /* FirebaseAuth */,
+				0C87CB222F1D9212005DAAA3 /* FirebaseCore */,
+				0C87CB242F1D9212005DAAA3 /* FirebaseFirestore */,
 			);
 			productName = rdvwodbet;
 			productReference = 0CA0DFDF2F1D6139000AD368 /* rdvwodbet.app */;
@@ -94,8 +97,11 @@
 			);
 			mainGroup = 0CA0DFD62F1D6139000AD368;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0C87CB1F2F1D9212005DAAA3 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 0CA0DFE02F1D6139000AD368 /* Products */;
+			productRefGroup = 0CA0DFD62F1D6139000AD368;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -332,6 +338,35 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0C87CB1F2F1D9212005DAAA3 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.8.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0C87CB202F1D9212005DAAA3 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0C87CB1F2F1D9212005DAAA3 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		0C87CB222F1D9212005DAAA3 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0C87CB1F2F1D9212005DAAA3 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		0C87CB242F1D9212005DAAA3 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0C87CB1F2F1D9212005DAAA3 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0CA0DFD72F1D6139000AD368 /* Project object */;
 }

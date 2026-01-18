@@ -1,7 +1,10 @@
-//
-//  FirebaseConfigurator.swift
-//  rdvwodbet
-//
-//  Created by Ricardo Del Vecchio on 18/01/26.
-//
+import Foundation
+import FirebaseCore
+
+enum FirebaseConfigurator {
+    static func configure() {
+        // Certifique-se de adicionar o GoogleService-Info.plist ao projeto
+        FirebaseApp.configure()
+    }
+}
 
