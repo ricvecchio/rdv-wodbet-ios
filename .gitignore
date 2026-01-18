@@ -1,0 +1,59 @@
+# === macOS ===
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# === Xcode ===
+DerivedData/
+build/
+*.xcuserdata
+*.xccheckout
+*.xcscmblueprint
+*.moved-aside
+*.swp
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Workspace user data
+xcuserdata/
+
+# Xcode build artifacts
+*.pbxuser
+*.xcscheme
+*.xcworkspacedata
+
+# === Swift Package Manager ===
+.build/
+Package.resolved
+
+# === CocoaPods ===
+Pods/
+# Descomente se você NÃO quer versionar o Podfile.lock
+# Podfile.lock
+
+# === Carthage ===
+Carthage/Build/
+
+# === Fastlane ===
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# === Environment / Secrets ===
+*.env
+*.p12
+*.mobileprovision
+*.cer
+*.key
+
+# === Logs ===
+*.log
+
+# === Optional: ignore generated docs ===
+docs/_build/
