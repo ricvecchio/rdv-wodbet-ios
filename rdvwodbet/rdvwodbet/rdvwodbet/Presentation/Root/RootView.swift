@@ -2,7 +2,6 @@ import SwiftUI
 
 struct RootView: View {
     @ObservedObject var container: AppDIContainer
-
     @StateObject private var authVM: AuthViewModel
 
     init(container: AppDIContainer) {
@@ -44,6 +43,9 @@ struct RootView: View {
                     )
                 }
             }
+            // ✅ impede que alguma view pinte fundo sólido
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.clear)
         }
     }
 }

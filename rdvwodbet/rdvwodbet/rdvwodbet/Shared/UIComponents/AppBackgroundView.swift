@@ -14,19 +14,15 @@ struct AppBackgroundView<Content: View>: View {
                 .scaledToFill()
                 .ignoresSafeArea()
 
-            // Overlay para contraste (deixa o app legível)
-            LinearGradient(
-                colors: [
-                    Color.black.opacity(0.40),
-                    Color.black.opacity(0.15),
-                    Color.black.opacity(0.40)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
+            // leve camada para contraste
+            Color.black.opacity(0.10)
+                .ignoresSafeArea()
 
             content
         }
+        // ✅ garante que NUNCA pinta branco por trás
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.clear)
     }
 }
+

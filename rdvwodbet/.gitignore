@@ -1,0 +1,52 @@
+# === macOS ===
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# === Xcode ===
+DerivedData/
+build/
+*.xcuserdata
+*.xccheckout
+*.xcscmblueprint
+*.moved-aside
+*.swp
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Workspace user data
+xcuserdata/
+
+# === Swift Package Manager ===
+.build/
+Package.resolved
+
+# === CocoaPods ===
+Pods/
+# Podfile.lock
+
+# === Carthage ===
+Carthage/Build/
+
+# === Fastlane ===
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# === Firebase / Secrets ===
+GoogleService-Info.plist
+*.env
+*.p12
+*.mobileprovision
+*.cer
+*.key
+
+# === Logs ===
+*.log
+

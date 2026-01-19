@@ -6,30 +6,32 @@ struct AuthView: View {
     var body: some View {
         VStack(spacing: 0) {
 
-            // 🔼 Spacer pequeno só para respiro
-            Spacer(minLength: 20)
+            Spacer(minLength: Theme.Layout.authTopSpacerMin)
 
-            // 🔥 LOGO DO APP (mais para cima)
             Image("rdv_wodbet_logo")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 300)
-                .padding(.bottom, 12)
+                .frame(width: Theme.Layout.logoWidth)
+                .padding(.bottom, Theme.Layout.logoBottomPadding)
                 .accessibilityHidden(true)
-                .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
+                .shadow(
+                    color: Theme.Colors.logoShadow,
+                    radius: Theme.Effects.logoShadowRadius,
+                    x: 0,
+                    y: Theme.Effects.logoShadowY
+                )
 
-            // 🔒 CARD DE LOGIN
             AuthCardView {
-                VStack(spacing: 14) {
+                VStack(spacing: Theme.Layout.authInnerSpacing) {
                     Text("RDV WODBet")
-                        .font(.title.bold())
-                        .foregroundColor(.white)
+                        .font(Theme.Typography.title)
+                        .foregroundColor(Theme.Colors.textPrimary)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
 
                     Text("Apostas entre amigos do box.\nQuem ganha o WOD?")
-                        .font(.footnote)
-                        .foregroundColor(.white.opacity(0.85))
+                        .font(Theme.Typography.footnote)
+                        .foregroundColor(Theme.Colors.textSecondary)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
 
@@ -37,25 +39,25 @@ struct AuthView: View {
                         title: "Entrar (dev)",
                         isDisabled: false
                     ) {
-                        viewModel.mockLoginForDev()
+                        // ✅ login real para não dar “insufficient permissions”
+                        viewModel.signInAnonymouslyForDev()
                     }
 
                     if let msg = viewModel.errorMessage {
                         Text(msg)
-                            .font(.footnote)
-                            .foregroundColor(.red)
+                            .font(Theme.Typography.footnote)
+                            .foregroundColor(Theme.Colors.error)
                             .multilineTextAlignment(.center)
                             .fixedSize(horizontal: false, vertical: true)
+                            .padding(.top, 4)
                     }
                 }
             }
 
-            // 🔽 Spacer grande para empurrar tudo para cima
             Spacer()
         }
-        // 🔥 sobe ainda mais o conjunto (ajuste fino)
-        .padding(.top, -100)
-        .padding(.horizontal, 8)
+        .padding(.top, Theme.Layout.authTopOffset)
+        .padding(.horizontal, Theme.Layout.screenHorizontalPadding)
     }
 }
 

@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import FirebaseAuth
 
 @MainActor
 final class AuthViewModel: ObservableObject {
@@ -63,9 +64,10 @@ final class AuthViewModel: ObservableObject {
         userRepository.fetchUser(uid: uid)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
+                guard let self else { return }
                 if case .failure(let err) = completion {
-                    self?.errorMessage = err.localizedDescription
-                    self?.state = .loggedOut
+                    self.errorMessage = err.localizedDescription
+                    self.state = .loggedOut
                 }
             } receiveValue: { [weak self] user in
                 guard let self else { return }
@@ -86,8 +88,38 @@ final class AuthViewModel: ObservableObject {
         }
     }
 
-    // ✅ DEV LOGIN (sem Firebase Auth real) – útil para testar UI rapidamente.
-    // Se você preferir, depois trocamos para Anonymous Auth real.
+    // ✅ DEV LOGIN REAL (Firebase Auth - Anônimo)
+    func signInAnonymouslyForDev() {
+        errorMessage = nil
+        state = .loading
+
+        Auth.auth().signInAnonymously { [weak self] result, error in
+            guard let self else { return }
+
+            if let error {
+                Task { @MainActor in
+                    self.errorMessage = "Falha ao autenticar: \(error.localizedDescription)"
+                    self.state = .loggedOut
+                }
+                return
+            }
+
+            guard let uid = result?.user.uid else {
+                Task { @MainActor in
+                    self.errorMessage = "Não foi possível obter UID."
+                    self.state = .loggedOut
+                }
+                return
+            }
+
+            Task { @MainActor in
+                self.currentUID = uid
+                self.loadUser(uid: uid)
+            }
+        }
+    }
+
+    // ⚠️ Se ainda quiser manter o mock, deixe aqui (mas NÃO use para Firestore)
     func mockLoginForDev(uid: String = "dev-user-123") {
         self.currentUID = uid
         self.state = .needsDisplayName(uid: uid)

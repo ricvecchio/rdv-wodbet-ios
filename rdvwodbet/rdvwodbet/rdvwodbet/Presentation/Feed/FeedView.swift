@@ -8,69 +8,113 @@ struct FeedView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                if let msg = viewModel.errorMessage {
-                    Text(msg)
-                        .foregroundStyle(.red)
-                }
+            ZStack {
+                Color.clear.ignoresSafeArea()
 
                 if viewModel.bets.isEmpty {
-                    VStack(spacing: 10) {
-                        Text("Nenhuma aposta por aqui ainda.")
-                            .font(.headline)
-                            .foregroundStyle(.white)
+                    ScrollView {
+                        VStack(spacing: 14) {
+                            Spacer(minLength: 24)
 
-                        Text("Crie a primeira aposta do WOD do dia 😄")
-                            .font(.subheadline)
-                            .foregroundStyle(.white.opacity(0.8))
+                            GlassCard {
+                                Text("Nenhuma aposta por aqui ainda.")
+                                    .font(.headline)
+                                    .foregroundColor(Theme.Colors.textPrimary)
+                                    .multilineTextAlignment(.center)
+                                    .frame(maxWidth: .infinity)
+
+                                Text("Crie a primeira aposta do WOD do dia 😄")
+                                    .font(.footnote)
+                                    .foregroundColor(Theme.Colors.textSecondary)
+                                    .multilineTextAlignment(.center)
+                                    .frame(maxWidth: .infinity)
+
+                                PrimaryButton(
+                                    title: "Criar aposta",
+                                    isDisabled: false,
+                                    widthStyle: .card
+                                ) {
+                                    showCreate = true
+                                }
+                                .padding(.top, 8)
+                            }
+
+                            Spacer(minLength: 24)
+                        }
+                        .frame(maxWidth: Theme.Layout.cardMaxWidth)
+                        .padding(.top, 16)
+                        .padding(.bottom, 24)
+                        .frame(maxWidth: .infinity, alignment: .center)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 24)
-                    .listRowBackground(Color.clear)
+
+                } else {
+                    List {
+                        ForEach(viewModel.bets) { bet in
+                            NavigationLink {
+                                BetDetailView(
+                                    viewModel: BetDetailViewModel(
+                                        bet: bet,
+                                        currentUser: viewModel.currentUser,
+                                        proposeWinnerUseCase: container.proposeWinnerUseCase,
+                                        confirmWinnerUseCase: container.confirmWinnerUseCase,
+                                        rejectWinnerUseCase: container.rejectWinnerUseCase,
+                                        cancelBetUseCase: container.cancelBetUseCase
+                                    )
+                                )
+                            } label: {
+                                BetCardView(bet: bet)
+                            }
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
+                        }
+                    }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .background(Color.clear)
                 }
 
-                ForEach(viewModel.bets) { bet in
-                    NavigationLink {
-                        BetDetailView(
-                            viewModel: BetDetailViewModel(
-                                bet: bet,
-                                currentUser: viewModel.currentUser,
-                                proposeWinnerUseCase: container.proposeWinnerUseCase,
-                                confirmWinnerUseCase: container.confirmWinnerUseCase,
-                                rejectWinnerUseCase: container.rejectWinnerUseCase,
-                                cancelBetUseCase: container.cancelBetUseCase
-                            )
-                        )
-                    } label: {
-                        BetCardView(bet: bet)
+                if let msg = viewModel.errorMessage {
+                    VStack {
+                        Text(msg)
+                            .font(.footnote)
+                            .foregroundColor(Theme.Colors.error)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(Capsule().fill(Color.black.opacity(0.55)))
+                        Spacer()
                     }
-                    .listRowBackground(Color.clear) // 🔥 impede branco
+                    .padding(.top, 8)
                 }
             }
-            .scrollContentBackground(.hidden) // 🔥 remove o fundo padrão do List
-            .listStyle(.plain)
             .navigationTitle("Apostas")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Sair") { try? container.authRepository.signOut() }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showCreate = true
-                    } label: {
+                    Button { showCreate = true } label: {
                         Image(systemName: "plus.circle.fill")
                     }
                 }
             }
+            .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbarBackground(Color.clear, for: .navigationBar)
             .sheet(isPresented: $showCreate) {
-                CreateBetView(
-                    viewModel: CreateBetViewModel(
-                        currentUser: viewModel.currentUser,
-                        userRepository: container.userRepository,
-                        createBetUseCase: container.createBetUseCase
+                // ✅ sheet sempre com fundo (mesmo se o sistema tentar branco)
+                AppBackgroundView {
+                    CreateBetView(
+                        viewModel: CreateBetViewModel(
+                            currentUser: viewModel.currentUser,
+                            userRepository: container.userRepository,
+                            createBetUseCase: container.createBetUseCase
+                        )
                     )
-                )
+                }
             }
         }
-        // 🔥 garante que a NavigationStack não pinte por trás
         .tint(.white)
+        .background(Color.clear)
     }
 }
 

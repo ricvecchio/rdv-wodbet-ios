@@ -11,30 +11,39 @@ struct AuthCardView<Content: View>: View {
         VStack {
             content
         }
-        .frame(maxWidth: 300)
-        .padding(16)
+        .frame(maxWidth: Theme.Layout.cardMaxWidth)
+        .padding(Theme.Layout.cardPadding)
         .background(
             ZStack {
-                // 🔥 Glass base (mais denso)
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(.regularMaterial)
+                // 🔥 Glass base
+                RoundedRectangle(
+                    cornerRadius: Theme.Layout.cardCornerRadius,
+                    style: .continuous
+                )
+                .fill(.regularMaterial)
 
-                // 🔥 Overlay escuro para contraste
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Color.black.opacity(0.45))
+                // 🔥 Overlay escuro para contraste (seu padrão final)
+                RoundedRectangle(
+                    cornerRadius: Theme.Layout.cardCornerRadius,
+                    style: .continuous
+                )
+                .fill(Theme.Colors.glassOverlay)
             }
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(Color.white.opacity(0.20), lineWidth: 1)
+            RoundedRectangle(
+                cornerRadius: Theme.Layout.cardCornerRadius,
+                style: .continuous
+            )
+            .stroke(Theme.Colors.border, lineWidth: Theme.Effects.borderLineWidth)
         )
         .shadow(
-            color: Color.black.opacity(0.30),
-            radius: 16,
+            color: Theme.Colors.cardShadow,
+            radius: Theme.Effects.cardShadowRadius,
             x: 0,
-            y: 10
+            y: Theme.Effects.cardShadowY
         )
-        .padding(.horizontal, 24)
+        .padding(.horizontal, Theme.Layout.cardHorizontalMargin)
     }
 }
 
