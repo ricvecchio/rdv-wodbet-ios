@@ -22,18 +22,12 @@ build/
 # Workspace user data
 xcuserdata/
 
-# Xcode build artifacts
-*.pbxuser
-*.xcscheme
-*.xcworkspacedata
-
 # === Swift Package Manager ===
 .build/
 Package.resolved
 
 # === CocoaPods ===
 Pods/
-# Descomente se você NÃO quer versionar o Podfile.lock
 # Podfile.lock
 
 # === Carthage ===
@@ -45,7 +39,8 @@ fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
 
-# === Environment / Secrets ===
+# === Firebase / Secrets ===
+GoogleService-Info.plist
 *.env
 *.p12
 *.mobileprovision
@@ -55,5 +50,4 @@ fastlane/test_output
 # === Logs ===
 *.log
 
-# === Optional: ignore generated docs ===
-docs/_build/
+GoogleService-Info.plist
