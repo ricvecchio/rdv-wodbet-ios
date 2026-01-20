@@ -25,10 +25,10 @@ struct PrimaryButton: View {
         self.action = action
     }
 
-    private var targetWidth: CGFloat? {
+    private var maxWidth: CGFloat? {
         switch widthStyle {
         case .fill:
-            return nil
+            return .infinity
         case .card:
             return Theme.Layout.cardMaxWidth
         case .custom(let w):
@@ -42,8 +42,7 @@ struct PrimaryButton: View {
                 .font(.headline)
                 .foregroundColor(Theme.Colors.buttonText)
                 .padding(.vertical, Theme.Effects.buttonVerticalPadding)
-                .frame(width: targetWidth) // ✅ largura fixa quando card/custom
-                .frame(maxWidth: targetWidth == nil ? .infinity : nil) // ✅ fill quando nil
+                .frame(maxWidth: maxWidth)
                 .background(
                     LinearGradient(
                         colors: [
@@ -65,7 +64,7 @@ struct PrimaryButton: View {
         .disabled(isDisabled)
         .opacity(isDisabled ? 0.6 : 1.0)
         .animation(.easeInOut(duration: 0.2), value: isDisabled)
-        .frame(maxWidth: .infinity, alignment: .center) // ✅ centraliza
+        .frame(maxWidth: .infinity, alignment: .center)
     }
 }
 

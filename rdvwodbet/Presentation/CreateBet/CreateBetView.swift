@@ -3,6 +3,11 @@ import SwiftUI
 struct CreateBetView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: CreateBetViewModel
+    @FocusState private var focusedField: Field?
+    
+    enum Field {
+        case wodTitle, prizeDescription
+    }
 
     var body: some View {
         AppBackgroundView {
@@ -43,10 +48,8 @@ struct CreateBetView: View {
                                 .background(Color.white.opacity(0.14))
                                 .cornerRadius(12)
                                 .foregroundColor(Theme.Colors.textPrimary)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Theme.Colors.border, lineWidth: 1)
-                                )
+                                .focused($focusedField, equals: .wodTitle)
+                                .submitLabel(.next)
                         }
 
                         GlassCard {
@@ -63,10 +66,8 @@ struct CreateBetView: View {
                                     .background(Color.white.opacity(0.14))
                                     .cornerRadius(12)
                                     .foregroundColor(Theme.Colors.textPrimary)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .stroke(Theme.Colors.border, lineWidth: 1)
-                                    )
+                                    .focused($focusedField, equals: .prizeDescription)
+                                    .submitLabel(.done)
                             }
                         }
 
@@ -80,12 +81,21 @@ struct CreateBetView: View {
                                 .frame(maxWidth: Theme.Layout.cardMaxWidth)
                         }
 
-                        PrimaryButton(
-                            title: viewModel.isSaving ? "Salvando..." : "Salvar aposta",
-                            isDisabled: viewModel.isSaving,
-                            widthStyle: .card
-                        ) {
-                            viewModel.save { dismiss() }
+                        VStack(spacing: 10) {
+                            PrimaryButton(
+                                title: viewModel.isSaving ? "Salvando..." : "Salvar aposta",
+                                isDisabled: viewModel.isSaving,
+                                widthStyle: .card
+                            ) {
+                                viewModel.save { dismiss() }
+                            }
+                            
+                            Button("Cancelar") {
+                                dismiss()
+                            }
+                            .font(.subheadline)
+                            .foregroundColor(Theme.Colors.textSecondary)
+                            .padding(.vertical, 8)
                         }
                         .padding(.top, 6)
 
@@ -102,16 +112,26 @@ struct CreateBetView: View {
                         Button {
                             dismiss()
                         } label: {
-                            Image(systemName: "chevron.left")
-                                .font(.headline)
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.title2)
                                 .foregroundColor(Theme.Colors.textPrimary)
                         }
                     }
                 }
                 .toolbarBackground(.hidden, for: .navigationBar)
+                .onSubmit {
+                    switch focusedField {
+                    case .wodTitle:
+                        focusedField = (viewModel.prizeType == .other) ? .prizeDescription : nil
+                    case .prizeDescription:
+                        focusedField = nil
+                    case .none:
+                        break
+                    }
+                }
             }
-            .tint(.white)
         }
+        .tint(.white)
     }
 
     // MARK: - Helpers
@@ -154,12 +174,8 @@ struct CreateBetView: View {
                 }
                 .padding(.vertical, 10)
                 .padding(.horizontal, 12)
-                .background(Color.white.opacity(0.14))
+                .background(Color.black.opacity(0.22))
                 .cornerRadius(12)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Theme.Colors.border, lineWidth: 1)
-                )
             }
         }
     }
@@ -187,12 +203,8 @@ struct CreateBetView: View {
                 }
                 .padding(.vertical, 10)
                 .padding(.horizontal, 12)
-                .background(Color.white.opacity(0.14))
+                .background(Color.black.opacity(0.22))
                 .cornerRadius(12)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Theme.Colors.border, lineWidth: 1)
-                )
             }
         }
     }

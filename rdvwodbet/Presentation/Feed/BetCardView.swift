@@ -59,7 +59,7 @@ struct BetCardView: View {
             x: 0,
             y: Theme.Effects.cardShadowY
         )
-        .padding(.vertical, 6) // respiro entre cards no feed
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
-
