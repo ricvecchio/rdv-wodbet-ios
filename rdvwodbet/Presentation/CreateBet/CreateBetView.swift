@@ -43,6 +43,10 @@ struct CreateBetView: View {
                                 .background(Color.white.opacity(0.14))
                                 .cornerRadius(12)
                                 .foregroundColor(Theme.Colors.textPrimary)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Theme.Colors.border, lineWidth: 1)
+                                )
                         }
 
                         GlassCard {
@@ -59,6 +63,10 @@ struct CreateBetView: View {
                                     .background(Color.white.opacity(0.14))
                                     .cornerRadius(12)
                                     .foregroundColor(Theme.Colors.textPrimary)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(Theme.Colors.border, lineWidth: 1)
+                                    )
                             }
                         }
 
@@ -96,13 +104,14 @@ struct CreateBetView: View {
                         } label: {
                             Image(systemName: "chevron.left")
                                 .font(.headline)
+                                .foregroundColor(Theme.Colors.textPrimary)
                         }
                     }
                 }
                 .toolbarBackground(.hidden, for: .navigationBar)
             }
+            .tint(.white)
         }
-        .tint(.white)
     }
 
     // MARK: - Helpers
@@ -145,8 +154,12 @@ struct CreateBetView: View {
                 }
                 .padding(.vertical, 10)
                 .padding(.horizontal, 12)
-                .background(Color.black.opacity(0.22))
+                .background(Color.white.opacity(0.14))
                 .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Theme.Colors.border, lineWidth: 1)
+                )
             }
         }
     }
@@ -174,10 +187,13 @@ struct CreateBetView: View {
                 }
                 .padding(.vertical, 10)
                 .padding(.horizontal, 12)
-                .background(Color.black.opacity(0.22))
+                .background(Color.white.opacity(0.14))
                 .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Theme.Colors.border, lineWidth: 1)
+                )
             }
         }
     }
 }
-

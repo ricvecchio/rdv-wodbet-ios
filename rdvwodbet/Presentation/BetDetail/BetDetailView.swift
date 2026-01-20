@@ -1,7 +1,10 @@
 import SwiftUI
 
 struct BetDetailView: View {
+    @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: BetDetailViewModel
+
+    private let barHeight: CGFloat = 52
 
     private var prizeText: String {
         viewModel.bet.prizeType == .other
@@ -10,12 +13,36 @@ struct BetDetailView: View {
     }
 
     var body: some View {
+        AppBackgroundView {
+            GeometryReader { proxy in
+                let topInset = proxy.safeAreaInsets.top
+                let totalTop = topInset + barHeight
+
+                ZStack(alignment: .top) {
+                    VStack(spacing: 0) {
+                        Color.clear.frame(height: totalTop)
+
+                        contentView
+                    }
+
+                    topBar(topInset: topInset)
+                }
+                .ignoresSafeArea()
+                // ✅ mata a navbar nativa e garante que você nunca “fica preso”
+                .toolbar(.hidden, for: .navigationBar)
+            }
+        }
+        .tint(.white)
+    }
+
+    // MARK: - Content
+
+    private var contentView: some View {
         ZStack {
             Color.clear.ignoresSafeArea()
 
             ScrollView {
                 VStack(spacing: 14) {
-
                     GlassCard {
                         Text("Status")
                             .font(.headline)
@@ -41,7 +68,6 @@ struct BetDetailView: View {
 
                     if (viewModel.bet.status == .open || viewModel.bet.status == .disputed),
                        viewModel.isAthlete {
-
                         GlassCard {
                             Text("Resultado")
                                 .font(.headline)
@@ -51,11 +77,11 @@ struct BetDetailView: View {
                                 .font(.footnote)
                                 .foregroundColor(Theme.Colors.textSecondary)
 
-                            HStack(spacing: 10) {
+                            HStack(spacing: 12) {
                                 PrimaryButton(
                                     title: "Vencedor: A",
                                     isDisabled: viewModel.isWorking,
-                                    widthStyle: .custom(145)
+                                    widthStyle: .fill
                                 ) {
                                     viewModel.proposeWinner(userId: viewModel.bet.athleteAUserId)
                                 }
@@ -63,7 +89,7 @@ struct BetDetailView: View {
                                 PrimaryButton(
                                     title: "Vencedor: B",
                                     isDisabled: viewModel.isWorking,
-                                    widthStyle: .custom(145)
+                                    widthStyle: .fill
                                 ) {
                                     viewModel.proposeWinner(userId: viewModel.bet.athleteBUserId)
                                 }
@@ -90,7 +116,6 @@ struct BetDetailView: View {
 
                     if viewModel.currentUser.id == viewModel.bet.createdByUserId,
                        (viewModel.bet.status == .open || viewModel.bet.status == .disputed) {
-
                         GlassCard {
                             Button(role: .destructive) {
                                 viewModel.cancel()
@@ -116,13 +141,53 @@ struct BetDetailView: View {
                 .padding(.bottom, 28)
                 .frame(maxWidth: .infinity)
             }
+            .background(Color.clear)
         }
-        .navigationTitle("Aposta")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.hidden, for: .navigationBar)
-        .toolbarBackground(Color.clear, for: .navigationBar)
-        .tint(.white)
-        .background(Color.clear)
+    }
+
+    // MARK: - TopBar
+
+    private func topBar(topInset: CGFloat) -> some View {
+        ZStack {
+            Rectangle()
+                .fill(.ultraThinMaterial)
+
+            Rectangle()
+                .fill(Color.black.opacity(0.55))
+
+            Rectangle()
+                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+
+            HStack(spacing: 12) {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.headline.weight(.semibold))
+                        .foregroundColor(.white)
+                        .frame(width: 36, height: 36)
+                        .background(Color.black.opacity(0.25))
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                        )
+                }
+
+                Spacer()
+
+                Text("Aposta")
+                    .font(.headline.weight(.semibold))
+                    .foregroundColor(.white)
+
+                Spacer()
+
+                Color.clear.frame(width: 36, height: 36)
+            }
+            .padding(.horizontal, 16)
+        }
+        .frame(height: barHeight)
+        .padding(.top, topInset)
     }
 }
 

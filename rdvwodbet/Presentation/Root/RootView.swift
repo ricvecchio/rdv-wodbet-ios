@@ -15,37 +15,37 @@ struct RootView: View {
 
     var body: some View {
         AppBackgroundView {
-            Group {
-                switch authVM.state {
-                case .loading:
-                    LoadingView(text: "Carregando...")
+            NavigationStack {
+                Group {
+                    switch authVM.state {
+                    case .loading:
+                        LoadingView(text: "Carregando...")
 
-                case .loggedOut:
-                    AuthView(viewModel: authVM)
+                    case .loggedOut:
+                        AuthView(viewModel: authVM)
 
-                case .needsDisplayName(let uid):
-                    DisplayNameOnboardingView(
-                        viewModel: DisplayNameOnboardingViewModel(
-                            uid: uid,
-                            userRepository: container.userRepository,
-                            onFinished: { authVM.refreshUserState() }
+                    case .needsDisplayName(let uid):
+                        DisplayNameOnboardingView(
+                            viewModel: DisplayNameOnboardingViewModel(
+                                uid: uid,
+                                userRepository: container.userRepository,
+                                onFinished: { authVM.refreshUserState() }
+                            )
                         )
-                    )
 
-                case .loggedIn(let user):
-                    FeedView(
-                        viewModel: FeedViewModel(
-                            currentUser: user,
-                            observeBetsUseCase: container.observeBetsUseCase,
-                            betRepository: container.betRepository
-                        ),
-                        container: container
-                    )
+                    case .loggedIn(let user):
+                        FeedView(
+                            viewModel: FeedViewModel(
+                                currentUser: user,
+                                observeBetsUseCase: container.observeBetsUseCase,
+                                betRepository: container.betRepository
+                            ),
+                            container: container
+                        )
+                    }
                 }
             }
-            // ✅ impede que alguma view pinte fundo sólido
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.clear)
+            .tint(.white)
         }
     }
 }
