@@ -3,7 +3,10 @@ import SwiftUI
 struct BetDetailView: View {
     @ObservedObject var viewModel: BetDetailViewModel
     @Environment(\.dismiss) private var dismiss
-    
+
+    let athleteAName: String
+    let athleteBName: String
+
     private var prizeText: String {
         viewModel.bet.prizeType == .other
         ? (viewModel.bet.prizeOtherDescription ?? "Outro")
@@ -13,38 +16,39 @@ struct BetDetailView: View {
     var body: some View {
         ZStack {
             Color.clear.ignoresSafeArea()
-            
+
             AppBackgroundView {
                 ScrollView {
                     VStack(spacing: 14) {
-                        
-                        // Cabeçalho com informações principais
+
                         GlassCard {
                             VStack(spacing: 12) {
                                 Text("Confronto")
                                     .font(.headline)
                                     .foregroundColor(Theme.Colors.textPrimary)
-                                
+
                                 HStack(spacing: 20) {
                                     VStack(spacing: 4) {
                                         Text("👤")
                                             .font(.largeTitle)
-                                        Text("Atleta A")
+                                        Text(athleteAName)
                                             .font(.subheadline)
                                             .foregroundColor(Theme.Colors.textPrimary)
+                                            .lineLimit(1)
                                     }
                                     .frame(maxWidth: .infinity)
-                                    
+
                                     Text("VS")
                                         .font(.title2.bold())
                                         .foregroundColor(Theme.Colors.textSecondary)
-                                    
+
                                     VStack(spacing: 4) {
                                         Text("👤")
                                             .font(.largeTitle)
-                                        Text("Atleta B")
+                                        Text(athleteBName)
                                             .font(.subheadline)
                                             .foregroundColor(Theme.Colors.textPrimary)
+                                            .lineLimit(1)
                                     }
                                     .frame(maxWidth: .infinity)
                                 }
@@ -58,9 +62,9 @@ struct BetDetailView: View {
                                     Text("Status")
                                         .font(.headline)
                                         .foregroundColor(Theme.Colors.textPrimary)
-                                    
+
                                     Spacer()
-                                    
+
                                     Text(viewModel.bet.status.label)
                                         .font(.subheadline.weight(.semibold))
                                         .foregroundColor(Theme.Colors.textSecondary)
@@ -71,10 +75,10 @@ struct BetDetailView: View {
                                                 .fill(Color.black.opacity(0.25))
                                         )
                                 }
-                                
+
                                 Divider()
                                     .background(Theme.Colors.border)
-                                
+
                                 VStack(alignment: .leading, spacing: 8) {
                                     HStack {
                                         Text("WOD:")
@@ -85,7 +89,7 @@ struct BetDetailView: View {
                                             .foregroundColor(Theme.Colors.textPrimary)
                                         Spacer()
                                     }
-                                    
+
                                     HStack {
                                         Text("Prêmio:")
                                             .font(.subheadline)
@@ -95,7 +99,7 @@ struct BetDetailView: View {
                                             .foregroundColor(Theme.Colors.textPrimary)
                                         Spacer()
                                     }
-                                    
+
                                     HStack {
                                         Text("Criada em:")
                                             .font(.subheadline)
@@ -118,7 +122,7 @@ struct BetDetailView: View {
                                     Text("Resultado")
                                         .font(.headline)
                                         .foregroundColor(Theme.Colors.textPrimary)
-                                    
+
                                     Text("Escolha o vencedor proposto:")
                                         .font(.footnote)
                                         .foregroundColor(Theme.Colors.textSecondary)
@@ -126,7 +130,7 @@ struct BetDetailView: View {
 
                                     HStack(spacing: 10) {
                                         PrimaryButton(
-                                            title: "Vencedor: A",
+                                            title: "Vencedor: \(athleteAName)",
                                             isDisabled: viewModel.isWorking,
                                             widthStyle: .custom(140)
                                         ) {
@@ -134,7 +138,7 @@ struct BetDetailView: View {
                                         }
 
                                         PrimaryButton(
-                                            title: "Vencedor: B",
+                                            title: "Vencedor: \(athleteBName)",
                                             isDisabled: viewModel.isWorking,
                                             widthStyle: .custom(140)
                                         ) {
@@ -174,7 +178,7 @@ struct BetDetailView: View {
                                     Text("Ações do Criador")
                                         .font(.headline)
                                         .foregroundColor(Theme.Colors.textPrimary)
-                                    
+
                                     Button(role: .destructive) {
                                         viewModel.cancel()
                                     } label: {
@@ -202,8 +206,7 @@ struct BetDetailView: View {
                                 .background(Capsule().fill(Color.black.opacity(0.55)))
                                 .frame(maxWidth: Theme.Layout.cardMaxWidth)
                         }
-                        
-                        // Botão Voltar
+
                         PrimaryButton(
                             title: "Voltar",
                             isDisabled: false,
@@ -214,10 +217,11 @@ struct BetDetailView: View {
                         .padding(.top, 10)
                     }
                     .frame(maxWidth: Theme.Layout.cardMaxWidth)
-                    .padding(.top, 16)
+                    .padding(.top, Theme.Layout.screenContentTopPadding)
                     .padding(.bottom, 28)
                     .frame(maxWidth: .infinity)
                 }
+                .contentUnderNavBarPadding()
             }
         }
         .navigationTitle("Detalhes da Aposta")
@@ -237,8 +241,8 @@ struct BetDetailView: View {
                 }
             }
         }
-        .toolbarBackground(.hidden, for: .navigationBar)
-        .tint(.white)
+        .appNavigationBarStyle()
         .background(Color.clear)
     }
 }
+

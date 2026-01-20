@@ -13,7 +13,7 @@ struct FeedView: View {
                     if viewModel.bets.isEmpty {
                         ScrollView {
                             VStack(spacing: 14) {
-                                Spacer(minLength: 24)
+                                Spacer(minLength: Theme.Layout.screenContentTopPadding)
 
                                 GlassCard {
                                     Text("Nenhuma aposta por aqui ainda.")
@@ -41,7 +41,6 @@ struct FeedView: View {
                                 Spacer(minLength: 24)
                             }
                             .frame(maxWidth: Theme.Layout.cardMaxWidth)
-                            .padding(.top, 16)
                             .padding(.bottom, 24)
                             .frame(maxWidth: .infinity, alignment: .center)
                         }
@@ -50,6 +49,9 @@ struct FeedView: View {
                         ScrollView {
                             VStack(spacing: 14) {
                                 ForEach(viewModel.bets) { bet in
+                                    let aName = viewModel.displayName(for: bet.athleteAUserId)
+                                    let bName = viewModel.displayName(for: bet.athleteBUserId)
+
                                     NavigationLink {
                                         BetDetailView(
                                             viewModel: BetDetailViewModel(
@@ -59,15 +61,21 @@ struct FeedView: View {
                                                 confirmWinnerUseCase: container.confirmWinnerUseCase,
                                                 rejectWinnerUseCase: container.rejectWinnerUseCase,
                                                 cancelBetUseCase: container.cancelBetUseCase
-                                            )
+                                            ),
+                                            athleteAName: aName,
+                                            athleteBName: bName
                                         )
                                     } label: {
-                                        BetCardView(bet: bet)
+                                        BetCardView(
+                                            bet: bet,
+                                            athleteAName: aName,
+                                            athleteBName: bName
+                                        )
                                     }
                                 }
                             }
                             .frame(maxWidth: Theme.Layout.cardMaxWidth)
-                            .padding(.top, 16)
+                            .padding(.top, Theme.Layout.screenContentTopPadding)
                             .padding(.bottom, 28)
                             .frame(maxWidth: .infinity, alignment: .center)
                         }
@@ -86,34 +94,35 @@ struct FeedView: View {
                         .padding(.top, 8)
                     }
                 }
-                .navigationTitle("Apostas")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button("Sair") { try? container.authRepository.signOut() }
-                    }
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button { showCreate = true } label: {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.title2)
-                                .foregroundColor(Theme.Colors.textPrimary)
-                        }
-                    }
+            }
+            .navigationTitle("Apostas")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Sair") { try? container.authRepository.signOut() }
                 }
-                .toolbarBackground(.hidden, for: .navigationBar)
-                .sheet(isPresented: $showCreate) {
-                    AppBackgroundView {
-                        CreateBetView(
-                            viewModel: CreateBetViewModel(
-                                currentUser: viewModel.currentUser,
-                                userRepository: container.userRepository,
-                                createBetUseCase: container.createBetUseCase
-                            )
-                        )
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { showCreate = true } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(Theme.Colors.textPrimary)
                     }
                 }
             }
+            .appNavigationBarStyle()
+            .sheet(isPresented: $showCreate) {
+                AppBackgroundView {
+                    CreateBetView(
+                        viewModel: CreateBetViewModel(
+                            currentUser: viewModel.currentUser,
+                            userRepository: container.userRepository,
+                            createBetUseCase: container.createBetUseCase
+                        )
+                    )
+                }
+            }
         }
-        .tint(.white)
+        .tint(Theme.Colors.textPrimary)
     }
 }
+

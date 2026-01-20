@@ -16,6 +16,10 @@ enum Theme {
         static let authTopOffset: CGFloat = -100
         static let authTopSpacerMin: CGFloat = 20
         static let authInnerSpacing: CGFloat = 14
+
+        // ✅ Espaçamento padrão (centraliza o conteúdo e evita ficar colado no cabeçalho)
+        // Use este valor nas telas (ex: .padding(.top, Theme.Layout.screenContentTopPadding))
+        static let screenContentTopPadding: CGFloat = 80
     }
 
     enum Colors {
@@ -40,6 +44,9 @@ enum Theme {
         static let buttonBackgroundTop = Color.black
         static let buttonBackgroundBottom = Color.black.opacity(0.85)
         static let buttonShadow = Color.black.opacity(0.35)
+
+        // ✅ Cabeçalho mais escuro (NavigationBar)
+        static let navBarBackground = Color.black.opacity(0.55)
     }
 
     enum Typography {

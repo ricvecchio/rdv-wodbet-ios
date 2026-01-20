@@ -2,6 +2,8 @@ import SwiftUI
 
 struct BetCardView: View {
     let bet: Bet
+    let athleteAName: String
+    let athleteBName: String
 
     private var prizeText: String {
         bet.prizeType == .other
@@ -13,9 +15,10 @@ struct BetCardView: View {
         VStack(alignment: .leading, spacing: 10) {
 
             HStack(alignment: .firstTextBaseline) {
-                Text("A vs B")
+                Text("\(athleteAName) vs \(athleteBName)")
                     .font(.headline)
                     .foregroundColor(Theme.Colors.textPrimary)
+                    .lineLimit(1)
 
                 Spacer()
 
@@ -59,7 +62,16 @@ struct BetCardView: View {
             x: 0,
             y: Theme.Effects.cardShadowY
         )
-        .padding(.vertical, 6)
+        .padding(.vertical,iOS: 6)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
+
+private extension View {
+    /// Pequena proteção: alguns simuladores/targets podem acusar warning com `.padding(.vertical, 6)`
+    /// em versões antigas; aqui fica explícito e controlado.
+    func padding(_ edges: Edge.Set = .all, iOS value: CGFloat) -> some View {
+        self.padding(edges, value)
+    }
+}
+
