@@ -1,53 +1,27 @@
-# === macOS ===
-.DS_Store
-.AppleDouble
-.LSOverride
+# ============================
+# Regra base: ignora tudo
+# ============================
+*
 
-# === Xcode ===
-DerivedData/
-build/
-*.xcuserdata
-*.xccheckout
-*.xcscmblueprint
-*.moved-aside
-*.swp
-*.mode1v3
-*.mode2v3
-*.perspectivev3
-*.hmap
-*.ipa
-*.dSYM.zip
-*.dSYM
+# ============================
+# Mantém arquivos essenciais do repo
+# ============================
+!.gitignore
+!README.md
 
-# Workspace user data
-xcuserdata/
+# ============================
+# Mantém o projeto iOS
+# ============================
+!rdvwodbet/
+!rdvwodbet/**
 
-# === Swift Package Manager ===
-.build/
-Package.resolved
+!rdvwodbet.xcodeproj/
+!rdvwodbet.xcodeproj/**
 
-# === CocoaPods ===
-Pods/
-# Podfile.lock
-
-# === Carthage ===
-Carthage/Build/
-
-# === Fastlane ===
-fastlane/report.xml
-fastlane/Preview.html
-fastlane/screenshots/**/*.png
-fastlane/test_output
-
-# === Firebase / Secrets ===
-GoogleService-Info.plist
-*.env
-*.p12
-*.mobileprovision
-*.cer
-*.key
-
-# === Logs ===
-*.log
-
-GoogleService-Info.plist
+# ============================
+# Boas práticas: ignorar lixo comum do macOS/Xcode
+# ============================
+**/.DS_Store
+**/DerivedData/
+**/xcuserdata/
+**/*.xcuserstate
