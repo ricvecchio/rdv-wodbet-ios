@@ -39,11 +39,13 @@ final class FeedViewModel: ObservableObject {
             } receiveValue: { [weak self] bets, users in
                 guard let self else { return }
 
-                // ✅ usersById para resolver nomes no feed/detalhe
                 self.usersById = Dictionary(uniqueKeysWithValues: users.map { ($0.id, $0) })
 
-                // ✅ Ordena por mais recentes (boa prática para feed)
-                self.bets = bets.sorted(by: { $0.createdAt > $1.createdAt })
+                // ✅ Fase 1: feed público essencial = mostrar somente abertas
+                let openBets = bets.filter { $0.status == .open }
+
+                // ✅ Ordena por mais recentes
+                self.bets = openBets.sorted(by: { $0.createdAt > $1.createdAt })
             }
             .store(in: &cancellables)
     }

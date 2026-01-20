@@ -31,9 +31,7 @@ final class FirestoreBetRepository: BetRepository {
     }
 
     func confirmWinner(betId: String, confirmerUserId: String) -> AnyPublisher<Void, AppError> {
-        // Ainda pendente: implementar transação Firestore
-        return Fail(error: .invalidInput("confirmWinner ainda não implementado (falta transação Firestore)."))
-            .eraseToAnyPublisher()
+        dataSource.confirmWinnerTransaction(betId: betId, confirmerUserId: confirmerUserId)
     }
 
     func rejectWinner(betId: String, rejectorUserId: String) -> AnyPublisher<Void, AppError> {
