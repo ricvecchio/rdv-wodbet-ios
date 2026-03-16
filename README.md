@@ -347,6 +347,7 @@ Shared/
 Cada camada possui responsabilidades bem definidas para garantir
 organização e escalabilidade.
 
+```
 RDVWODBet/
 ├─ App/
 │  ├─ RDVWODBetApp.swift
@@ -429,6 +430,7 @@ RDVWODBet/
    │
    └─ Extensions/
       └─ Date+Format.swift
+```
 
 ---
 
