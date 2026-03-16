@@ -336,14 +336,6 @@ Esses testes garantem:
 
 # 🗂 Estrutura Geral do Projeto
 
-RDVWODBet/
-
-App/\
-Presentation/\
-Domain/\
-Data/\
-Shared/
-
 Cada camada possui responsabilidades bem definidas para garantir
 organização e escalabilidade.
 
