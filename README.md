@@ -340,7 +340,7 @@ Cada camada possui responsabilidades bem definidas para garantir
 organização e escalabilidade.
 
 ```
-RDVWODBet/
+rdvwodbet/
 ├─ App/
 │  ├─ RDVWODBetApp.swift
 │  ├─ AppDIContainer.swift
@@ -422,6 +422,19 @@ RDVWODBet/
    │
    └─ Extensions/
       └─ Date+Format.swift
+      
+rdvwodbetTests/
+├─ Support/
+│  └─ BetRepositorySpy.swift
+│
+├─ UseCases/
+│  ├─ CancelBetUseCaseTests.swift
+│  ├─ ConfirmWinnerUseCaseTests.swift
+│  └─ CreateBetUseCaseTests.swift
+│   
+└─ Validators/
+   ├─ ValidatorsCreateBetTests.swift
+   └─ ValidatorsDisplayNameTests.swift
 ```
 
 ---
