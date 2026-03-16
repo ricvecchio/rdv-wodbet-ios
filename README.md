@@ -347,6 +347,144 @@ Shared/
 Cada camada possui responsabilidades bem definidas para garantir
 organização e escalabilidade.
 
+RDVWODBet/
+├─ App/
+│  ├─ RDVWODBetApp.swift
+│  ├─ AppDIContainer.swift
+│  ├─ AppEnvironment.swift
+│  └─ FirebaseConfigurator.swift
+│
+├─ Presentation/
+│  ├─ Auth/
+│  │  ├─ AuthView.swift
+│  │  ├─ AuthViewModel.swift
+│  │  ├─ DisplayNameOnboardingView.swift
+│  │  └─ DisplayNameOnboardingViewModel.swift
+│  │
+│  ├─ Feed/
+│  │  ├─ FeedView.swift
+│  │  ├─ FeedViewModel.swift
+│  │  └─ BetCardView.swift
+│  │
+│  ├─ CreateBet/
+│  │  ├─ CreateBetView.swift
+│  │  └─ CreateBetViewModel.swift
+│  │
+│  ├─ BetDetail/
+│  │  ├─ BetDetailView.swift
+│  │  └─ BetDetailViewModel.swift
+│  │
+│  └─ Root/
+│     └─ RootView.swift
+│
+├─ Domain/
+│  ├─ Entities/
+│  │  ├─ AppUser.swift
+│  │  ├─ Bet.swift
+│  │  ├─ PrizeType.swift
+│  │  └─ BetStatus.swift
+│  │
+│  ├─ Protocols/
+│  │  ├─ AuthRepository.swift
+│  │  ├─ UserRepository.swift
+│  │  └─ BetRepository.swift
+│  │
+│  └─ UseCases/
+│     ├─ ObserveBetsUseCase.swift
+│     ├─ CreateBetUseCase.swift
+│     ├─ ProposeWinnerUseCase.swift
+│     ├─ ConfirmWinnerUseCase.swift
+│     ├─ RejectWinnerUseCase.swift
+│     ├─ CancelBetUseCase.swift
+│     └─ ObserveAuthStateUseCase.swift
+│
+├─ Data/
+│  ├─ DTOs/
+│  │  ├─ AppUserDTO.swift
+│  │  └─ BetDTO.swift
+│  │
+│  ├─ Mappers/
+│  │  ├─ AppUserMapper.swift
+│  │  └─ BetMapper.swift
+│  │
+│  ├─ Repositories/
+│  │  ├─ FirebaseAuthRepository.swift
+│  │  ├─ FirestoreUserRepository.swift
+│  │  └─ FirestoreBetRepository.swift
+│  │
+│  └─ Firebase/
+│     ├─ FirebaseAuthDataSource.swift
+│     ├─ FirestoreUserDataSource.swift
+│     └─ FirestoreBetDataSource.swift
+│
+└─ Shared/
+   ├─ UIComponents/
+   │  ├─ PrimaryButton.swift
+   │  └─ LoadingView.swift
+   │
+   ├─ Utils/
+   │  ├─ AppError.swift
+   │  ├─ Logger.swift
+   │  └─ Validators.swift
+   │
+   └─ Extensions/
+      └─ Date+Format.swift
+
+---
+
+## 📋 Análise de Requisitos do Projeto
+
+### ✅ Requisitos Atendidos
+
+#### 1. Feed público em tempo real
+- Implementado com **Firestore**
+- Atualizações automáticas via **snapshot listener**
+
+#### 2. Criação e validação de apostas
+- Validações centralizadas
+- **UseCases** isolando regras de negócio
+
+#### 3. Confirmação dupla de resultado
+- Evita fraudes
+- Estados bem definidos:
+  - `open`
+  - `finished`
+  - `disputed`
+  - `canceled`
+
+#### 4. Arquitetura limpa e escalável
+- Separação clara entre **Presentation**, **Domain** e **Data**
+- Fácil evolução para rankings, conquistas e histórico
+
+---
+
+## 🔧 Build / Execução
+
+1. Abra o projeto no **Xcode 15+**
+2. Adicione o arquivo `GoogleService-Info.plist` ao target do app
+3. Instale o Firebase via **Swift Package Manager**
+4. Execute em simulador ou dispositivo **iOS 16+**
+
+---
+
+## 🎯 Próximos Passos
+
+- Finalizar **Sign in with Apple**
+- Implementar transações Firestore para confirmação de vencedor
+- Ranking de atletas
+- Sistema de conquistas (*achievements*)
+- Inventário de prêmios pendentes
+- Notificações push
+- Testes unitários e testes de UI
+
+---
+
+## 👨‍💻 Projeto focado em boas práticas
+
+O **RDV WODBet** foi desenvolvido com foco em **organização, clareza e escalabilidade**, servindo como base real para evolução contínua e também como **projeto de portfólio profissional** em iOS com **SwiftUI**.
+
+
+
 ------------------------------------------------------------------------
 
 # 🔧 Build / Execução
