@@ -125,7 +125,7 @@ struct FeedView: View {
                 .lineLimit(1)
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 8)
+        .padding(.top, 14)
         .padding(.bottom, 8)
         .padding(.horizontal, 16)
         .background(Color.black.opacity(0.45))
@@ -175,7 +175,7 @@ struct FeedView: View {
             .foregroundColor(Theme.Colors.textPrimary)
             .frame(maxWidth: .infinity) // agora funciona corretamente dentro do limite
             .frame(height: 36) // 🔽 menor altura
-            .background(Color.black.opacity(0.35))
+            .background(Color.black.opacity(0.55))
             .cornerRadius(10)
         }
         .buttonStyle(.plain)
