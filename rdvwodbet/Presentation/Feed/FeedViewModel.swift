@@ -41,11 +41,8 @@ final class FeedViewModel: ObservableObject {
 
                 self.usersById = Dictionary(uniqueKeysWithValues: users.map { ($0.id, $0) })
 
-                // ✅ Fase 1: feed público essencial = mostrar somente abertas
-                let openBets = bets.filter { $0.status == .open }
-
-                // ✅ Ordena por mais recentes
-                self.bets = openBets.sorted(by: { $0.createdAt > $1.createdAt })
+                // Feed público: exibir todas as apostas
+                self.bets = bets.sorted(by: { $0.createdAt > $1.createdAt })
             }
             .store(in: &cancellables)
     }
@@ -54,4 +51,3 @@ final class FeedViewModel: ObservableObject {
         usersById[userId]?.displayName ?? "—"
     }
 }
-

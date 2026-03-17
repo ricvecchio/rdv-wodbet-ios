@@ -35,15 +35,10 @@ final class FirestoreBetRepository: BetRepository {
     }
 
     func rejectWinner(betId: String, rejectorUserId: String) -> AnyPublisher<Void, AppError> {
-        dataSource.setBet(betId: betId, data: [
-            "status": BetStatus.disputed.rawValue
-        ])
+        dataSource.rejectWinnerTransaction(betId: betId, rejectorUserId: rejectorUserId)
     }
 
     func cancelBet(betId: String, requesterUserId: String) -> AnyPublisher<Void, AppError> {
-        dataSource.setBet(betId: betId, data: [
-            "status": BetStatus.canceled.rawValue
-        ])
+        dataSource.cancelBetTransaction(betId: betId, requesterUserId: requesterUserId)
     }
 }
-

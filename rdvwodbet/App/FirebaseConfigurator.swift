@@ -3,8 +3,7 @@ import FirebaseCore
 
 enum FirebaseConfigurator {
     static func configure() {
-        // Certifique-se de adicionar o GoogleService-Info.plist ao projeto
+        guard FirebaseApp.app() == nil else { return }
         FirebaseApp.configure()
     }
 }
-

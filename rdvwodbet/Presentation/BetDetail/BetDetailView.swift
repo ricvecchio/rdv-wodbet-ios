@@ -13,6 +13,42 @@ struct BetDetailView: View {
         : viewModel.bet.prizeType.displayName
     }
 
+    private var proposedWinnerName: String {
+        guard let proposedWinnerUserId = viewModel.bet.proposedWinnerUserId else {
+            return "Ainda não definido"
+        }
+
+        if proposedWinnerUserId == viewModel.bet.athleteAUserId {
+            return athleteAName
+        }
+
+        if proposedWinnerUserId == viewModel.bet.athleteBUserId {
+            return athleteBName
+        }
+
+        return "Ainda não definido"
+    }
+
+    private var confirmedWinnerName: String {
+        guard let confirmedWinnerUserId = viewModel.bet.confirmedWinnerUserId else {
+            return "Ainda não confirmado"
+        }
+
+        if confirmedWinnerUserId == viewModel.bet.athleteAUserId {
+            return athleteAName
+        }
+
+        if confirmedWinnerUserId == viewModel.bet.athleteBUserId {
+            return athleteBName
+        }
+
+        return "Ainda não confirmado"
+    }
+
+    private func confirmationLabel(forAthleteConfirmed isConfirmed: Bool) -> String {
+        isConfirmed ? "✅ Confirmado" : "⏳ Aguardando"
+    }
+
     var body: some View {
         AppBackgroundView {
             ScrollView {
@@ -28,6 +64,7 @@ struct BetDetailView: View {
                                 VStack(spacing: 4) {
                                     Text("👤")
                                         .font(.largeTitle)
+
                                     Text(athleteAName)
                                         .font(.subheadline)
                                         .foregroundColor(Theme.Colors.textPrimary)
@@ -42,6 +79,7 @@ struct BetDetailView: View {
                                 VStack(spacing: 4) {
                                     Text("👤")
                                         .font(.largeTitle)
+
                                     Text(athleteBName)
                                         .font(.subheadline)
                                         .foregroundColor(Theme.Colors.textPrimary)
@@ -81,9 +119,11 @@ struct BetDetailView: View {
                                     Text("WOD:")
                                         .font(.subheadline)
                                         .foregroundColor(Theme.Colors.textSecondary)
+
                                     Text(viewModel.bet.wodTitle)
                                         .font(.subheadline)
                                         .foregroundColor(Theme.Colors.textPrimary)
+
                                     Spacer()
                                 }
 
@@ -91,9 +131,11 @@ struct BetDetailView: View {
                                     Text("Prêmio:")
                                         .font(.subheadline)
                                         .foregroundColor(Theme.Colors.textSecondary)
+
                                     Text(prizeText)
                                         .font(.subheadline)
                                         .foregroundColor(Theme.Colors.textPrimary)
+
                                     Spacer()
                                 }
 
@@ -101,13 +143,76 @@ struct BetDetailView: View {
                                     Text("Criada em:")
                                         .font(.subheadline)
                                         .foregroundColor(Theme.Colors.textSecondary)
+
                                     Text(viewModel.bet.createdAt, style: .date)
                                         .font(.subheadline)
                                         .foregroundColor(Theme.Colors.textPrimary)
+
                                     Spacer()
                                 }
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+
+                    GlassCard {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Andamento do Resultado")
+                                .font(.headline)
+                                .foregroundColor(Theme.Colors.textPrimary)
+
+                            HStack {
+                                Text("Vencedor proposto:")
+                                    .font(.subheadline)
+                                    .foregroundColor(Theme.Colors.textSecondary)
+
+                                Text(proposedWinnerName)
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundColor(Theme.Colors.textPrimary)
+
+                                Spacer()
+                            }
+
+                            HStack {
+                                Text("Vencedor confirmado:")
+                                    .font(.subheadline)
+                                    .foregroundColor(Theme.Colors.textSecondary)
+
+                                Text(confirmedWinnerName)
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundColor(Theme.Colors.textPrimary)
+
+                                Spacer()
+                            }
+
+                            Divider()
+                                .background(Theme.Colors.border)
+
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack {
+                                    Text("\(athleteAName):")
+                                        .font(.subheadline)
+                                        .foregroundColor(Theme.Colors.textSecondary)
+
+                                    Text(confirmationLabel(forAthleteConfirmed: viewModel.bet.athleteAConfirmed))
+                                        .font(.subheadline.weight(.semibold))
+                                        .foregroundColor(Theme.Colors.textPrimary)
+
+                                    Spacer()
+                                }
+
+                                HStack {
+                                    Text("\(athleteBName):")
+                                        .font(.subheadline)
+                                        .foregroundColor(Theme.Colors.textSecondary)
+
+                                    Text(confirmationLabel(forAthleteConfirmed: viewModel.bet.athleteBConfirmed))
+                                        .font(.subheadline.weight(.semibold))
+                                        .foregroundColor(Theme.Colors.textPrimary)
+
+                                    Spacer()
+                                }
+                            }
                         }
                     }
 
@@ -145,13 +250,22 @@ struct BetDetailView: View {
                                 .padding(.top, 4)
 
                                 PrimaryButton(
-                                    title: viewModel.isWorking ? "Confirmando..." : "Confirmar",
-                                    isDisabled: viewModel.isWorking,
+                                    title: viewModel.isWorking
+                                        ? "Confirmando..."
+                                        : (viewModel.currentUserAlreadyConfirmed ? "Já confirmado" : "Confirmar"),
+                                    isDisabled: viewModel.isWorking || !viewModel.canConfirmResult || viewModel.currentUserAlreadyConfirmed,
                                     widthStyle: .card
                                 ) {
                                     viewModel.confirm()
                                 }
                                 .padding(.top, 8)
+
+                                if !viewModel.canConfirmResult {
+                                    Text("Escolha um vencedor antes de confirmar o resultado.")
+                                        .font(.footnote)
+                                        .foregroundColor(Theme.Colors.textSecondary)
+                                        .multilineTextAlignment(.center)
+                                }
 
                                 Button(role: .destructive) {
                                     viewModel.reject()
@@ -214,7 +328,7 @@ struct BetDetailView: View {
                     .padding(.top, 10)
                 }
                 .frame(maxWidth: Theme.Layout.cardMaxWidth)
-                .padding(.top, Theme.Layout.screenContentTopPadding) // ✅ mantém somente UM padding no topo
+                .padding(.top, Theme.Layout.screenContentTopPadding)
                 .padding(.bottom, 28)
                 .frame(maxWidth: .infinity)
             }
@@ -229,6 +343,7 @@ struct BetDetailView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.left")
                             .font(.headline)
+
                         Text("Voltar")
                             .font(.subheadline)
                     }
@@ -240,4 +355,3 @@ struct BetDetailView: View {
         .background(Color.clear)
     }
 }
-

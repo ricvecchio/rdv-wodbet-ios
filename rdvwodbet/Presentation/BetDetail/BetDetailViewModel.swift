@@ -36,6 +36,24 @@ final class BetDetailViewModel: ObservableObject {
         currentUser.id == bet.athleteAUserId || currentUser.id == bet.athleteBUserId
     }
 
+    var canConfirmResult: Bool {
+        guard isAthlete else { return false }
+        guard bet.status == .open || bet.status == .disputed else { return false }
+        return bet.proposedWinnerUserId != nil
+    }
+
+    var currentUserAlreadyConfirmed: Bool {
+        if currentUser.id == bet.athleteAUserId {
+            return bet.athleteAConfirmed
+        }
+
+        if currentUser.id == bet.athleteBUserId {
+            return bet.athleteBConfirmed
+        }
+
+        return false
+    }
+
     func proposeWinner(userId: String) {
         errorMessage = nil
         isWorking = true
@@ -45,6 +63,7 @@ final class BetDetailViewModel: ObservableObject {
             .sink { [weak self] completion in
                 guard let self else { return }
                 self.isWorking = false
+
                 if case .failure(let err) = completion {
                     self.errorMessage = err.localizedDescription
                 }
@@ -53,6 +72,11 @@ final class BetDetailViewModel: ObservableObject {
     }
 
     func confirm() {
+        guard canConfirmResult else {
+            errorMessage = "Selecione um vencedor antes de confirmar."
+            return
+        }
+
         errorMessage = nil
         isWorking = true
 
@@ -61,6 +85,7 @@ final class BetDetailViewModel: ObservableObject {
             .sink { [weak self] completion in
                 guard let self else { return }
                 self.isWorking = false
+
                 if case .failure(let err) = completion {
                     self.errorMessage = err.localizedDescription
                 }
@@ -77,6 +102,7 @@ final class BetDetailViewModel: ObservableObject {
             .sink { [weak self] completion in
                 guard let self else { return }
                 self.isWorking = false
+
                 if case .failure(let err) = completion {
                     self.errorMessage = err.localizedDescription
                 }
@@ -93,6 +119,7 @@ final class BetDetailViewModel: ObservableObject {
             .sink { [weak self] completion in
                 guard let self else { return }
                 self.isWorking = false
+
                 if case .failure(let err) = completion {
                     self.errorMessage = err.localizedDescription
                 }
@@ -100,4 +127,3 @@ final class BetDetailViewModel: ObservableObject {
             .store(in: &cancellables)
     }
 }
-
