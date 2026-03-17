@@ -9,66 +9,69 @@ struct FeedView: View {
     var body: some View {
         NavigationStack {
             AppBackgroundView {
-                ZStack {
-                    ScrollView {
-                        VStack(spacing: 14) {
-                            headerCard()
+                ZStack(alignment: .top) {
+                    VStack(spacing: 0) {
+                        headerSection()
 
-                            if viewModel.bets.isEmpty {
-                                GlassCard {
-                                    Text("Nenhuma aposta por aqui ainda.")
-                                        .font(.headline)
-                                        .foregroundColor(Theme.Colors.textPrimary)
-                                        .multilineTextAlignment(.center)
-                                        .frame(maxWidth: .infinity)
+                        ScrollView {
+                            VStack(spacing: 14) {
+                                if viewModel.bets.isEmpty {
+                                    GlassCard {
+                                        Text("Nenhuma aposta por aqui ainda.")
+                                            .font(.headline)
+                                            .foregroundColor(Theme.Colors.textPrimary)
+                                            .multilineTextAlignment(.center)
+                                            .frame(maxWidth: .infinity)
 
-                                    Text("Crie a primeira aposta do WOD do dia 😄")
-                                        .font(.footnote)
-                                        .foregroundColor(Theme.Colors.textSecondary)
-                                        .multilineTextAlignment(.center)
-                                        .frame(maxWidth: .infinity)
+                                        Text("Crie a primeira aposta do WOD do dia 😄")
+                                            .font(.footnote)
+                                            .foregroundColor(Theme.Colors.textSecondary)
+                                            .multilineTextAlignment(.center)
+                                            .frame(maxWidth: .infinity)
 
-                                    PrimaryButton(
-                                        title: "Criar aposta",
-                                        isDisabled: false,
-                                        widthStyle: .card
-                                    ) {
-                                        showCreate = true
+                                        PrimaryButton(
+                                            title: "Criar aposta",
+                                            isDisabled: false,
+                                            widthStyle: .card
+                                        ) {
+                                            showCreate = true
+                                        }
+                                        .padding(.top, 8)
                                     }
-                                    .padding(.top, 8)
-                                }
-                            } else {
-                                ForEach(viewModel.bets) { bet in
-                                    let aName = viewModel.displayName(for: bet.athleteAUserId)
-                                    let bName = viewModel.displayName(for: bet.athleteBUserId)
+                                } else {
+                                    ForEach(viewModel.bets) { bet in
+                                        let aName = viewModel.displayName(for: bet.athleteAUserId)
+                                        let bName = viewModel.displayName(for: bet.athleteBUserId)
 
-                                    NavigationLink {
-                                        BetDetailView(
-                                            viewModel: BetDetailViewModel(
+                                        NavigationLink {
+                                            BetDetailView(
+                                                viewModel: BetDetailViewModel(
+                                                    bet: bet,
+                                                    currentUser: viewModel.currentUser,
+                                                    proposeWinnerUseCase: container.proposeWinnerUseCase,
+                                                    confirmWinnerUseCase: container.confirmWinnerUseCase,
+                                                    rejectWinnerUseCase: container.rejectWinnerUseCase,
+                                                    cancelBetUseCase: container.cancelBetUseCase
+                                                ),
+                                                athleteAName: aName,
+                                                athleteBName: bName
+                                            )
+                                        } label: {
+                                            BetCardView(
                                                 bet: bet,
-                                                currentUser: viewModel.currentUser,
-                                                proposeWinnerUseCase: container.proposeWinnerUseCase,
-                                                confirmWinnerUseCase: container.confirmWinnerUseCase,
-                                                rejectWinnerUseCase: container.rejectWinnerUseCase,
-                                                cancelBetUseCase: container.cancelBetUseCase
-                                            ),
-                                            athleteAName: aName,
-                                            athleteBName: bName
-                                        )
-                                    } label: {
-                                        BetCardView(
-                                            bet: bet,
-                                            athleteAName: aName,
-                                            athleteBName: bName
-                                        )
+                                                athleteAName: aName,
+                                                athleteBName: bName
+                                            )
+                                        }
                                     }
                                 }
                             }
+                            .frame(maxWidth: Theme.Layout.cardMaxWidth)
+                            .padding(.top, 12)
+                            .padding(.bottom, 88)
+                            .padding(.horizontal, 12)
+                            .frame(maxWidth: .infinity, alignment: .center)
                         }
-                        .frame(maxWidth: Theme.Layout.cardMaxWidth)
-                        .padding(.top, Theme.Layout.screenContentTopPadding)
-                        .padding(.bottom, 28)
-                        .frame(maxWidth: .infinity, alignment: .center)
                     }
 
                     if let msg = viewModel.errorMessage {
@@ -89,6 +92,9 @@ struct FeedView: View {
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(.hidden, for: .navigationBar)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                footerSection()
+            }
             .sheet(isPresented: $showCreate) {
                 AppBackgroundView {
                     CreateBetView(
@@ -105,52 +111,73 @@ struct FeedView: View {
     }
 
     @ViewBuilder
-    private func headerCard() -> some View {
-        GlassCard {
-            VStack(spacing: 12) {
-                VStack(spacing: 4) {
-                    Text("Apostas")
-                        .font(.title3.bold())
-                        .foregroundColor(Theme.Colors.textPrimary)
+    private func headerSection() -> some View {
+        VStack(spacing: 2) {
+            Text("Apostas")
+                .font(.headline.bold())
+                .foregroundColor(Theme.Colors.textPrimary)
+                .multilineTextAlignment(.center)
 
-                    Text("Logado como \(viewModel.currentUser.displayName)")
-                        .font(.footnote)
-                        .foregroundColor(Theme.Colors.textSecondary)
-                        .multilineTextAlignment(.center)
-                }
+            Text("Logado como \(viewModel.currentUser.displayName)")
+                .font(.caption)
+                .foregroundColor(Theme.Colors.textSecondary)
+                .multilineTextAlignment(.center)
+                .lineLimit(1)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 8)
+        .padding(.bottom, 8)
+        .padding(.horizontal, 16)
+        .background(Color.black.opacity(0.45))
+    }
 
-                HStack(spacing: 10) {
-                    Button {
-                        try? container.authRepository.signOut()
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "rectangle.portrait.and.arrow.right")
-                            Text("Deslogar")
-                        }
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundColor(Theme.Colors.textPrimary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(Color.black.opacity(0.22))
-                        .cornerRadius(12)
-                    }
+    @ViewBuilder
+    private func footerSection() -> some View {
+        HStack(spacing: 10) {
+            footerButton(
+                title: "Deslogar",
+                systemImage: "rectangle.portrait.and.arrow.right"
+            ) {
+                try? container.authRepository.signOut()
+            }
 
-                    Button {
-                        showCreate = true
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "plus.circle.fill")
-                            Text("Nova aposta")
-                        }
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundColor(Theme.Colors.textPrimary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(Color.black.opacity(0.22))
-                        .cornerRadius(12)
-                    }
-                }
+            footerButton(
+                title: "Nova aposta",
+                systemImage: "plus.circle.fill"
+            ) {
+                showCreate = true
             }
         }
+        .frame(maxWidth: Theme.Layout.cardMaxWidth) // 🔑 LIMITA largura igual aos cards
+        .padding(.horizontal, 12)
+        .padding(.top, 8)
+        .padding(.bottom, 10)
+        .frame(maxWidth: .infinity)
+        .background(Color.black.opacity(0.45))
+    }
+
+    @ViewBuilder
+    private func footerButton(
+        title: String,
+        systemImage: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: systemImage)
+                    .font(.caption)
+
+                Text(title)
+                    .font(.caption.weight(.semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+            }
+            .foregroundColor(Theme.Colors.textPrimary)
+            .frame(maxWidth: .infinity) // agora funciona corretamente dentro do limite
+            .frame(height: 36) // 🔽 menor altura
+            .background(Color.black.opacity(0.35))
+            .cornerRadius(10)
+        }
+        .buttonStyle(.plain)
     }
 }
