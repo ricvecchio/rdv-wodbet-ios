@@ -10,11 +10,11 @@ struct FeedView: View {
         NavigationStack {
             AppBackgroundView {
                 ZStack {
-                    if viewModel.bets.isEmpty {
-                        ScrollView {
-                            VStack(spacing: 14) {
-                                Spacer(minLength: Theme.Layout.screenContentTopPadding)
+                    ScrollView {
+                        VStack(spacing: 14) {
+                            headerCard()
 
+                            if viewModel.bets.isEmpty {
                                 GlassCard {
                                     Text("Nenhuma aposta por aqui ainda.")
                                         .font(.headline)
@@ -37,17 +37,7 @@ struct FeedView: View {
                                     }
                                     .padding(.top, 8)
                                 }
-
-                                Spacer(minLength: 24)
-                            }
-                            .frame(maxWidth: Theme.Layout.cardMaxWidth)
-                            .padding(.bottom, 24)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                        }
-
-                    } else {
-                        ScrollView {
-                            VStack(spacing: 14) {
+                            } else {
                                 ForEach(viewModel.bets) { bet in
                                     let aName = viewModel.displayName(for: bet.athleteAUserId)
                                     let bName = viewModel.displayName(for: bet.athleteBUserId)
@@ -74,11 +64,11 @@ struct FeedView: View {
                                     }
                                 }
                             }
-                            .frame(maxWidth: Theme.Layout.cardMaxWidth)
-                            .padding(.top, Theme.Layout.screenContentTopPadding)
-                            .padding(.bottom, 28)
-                            .frame(maxWidth: .infinity, alignment: .center)
                         }
+                        .frame(maxWidth: Theme.Layout.cardMaxWidth)
+                        .padding(.top, Theme.Layout.screenContentTopPadding)
+                        .padding(.bottom, 28)
+                        .frame(maxWidth: .infinity, alignment: .center)
                     }
 
                     if let msg = viewModel.errorMessage {
@@ -89,27 +79,16 @@ struct FeedView: View {
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 10)
                                 .background(Capsule().fill(Color.black.opacity(0.55)))
+
                             Spacer()
                         }
                         .padding(.top, 8)
                     }
                 }
             }
-            .navigationTitle("Apostas")
+            .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Sair") { try? container.authRepository.signOut() }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button { showCreate = true } label: {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(Theme.Colors.textPrimary)
-                    }
-                }
-            }
-            .appNavigationBarStyle()
+            .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showCreate) {
                 AppBackgroundView {
                     CreateBetView(
@@ -124,5 +103,54 @@ struct FeedView: View {
         }
         .tint(Theme.Colors.textPrimary)
     }
-}
 
+    @ViewBuilder
+    private func headerCard() -> some View {
+        GlassCard {
+            VStack(spacing: 12) {
+                VStack(spacing: 4) {
+                    Text("Apostas")
+                        .font(.title3.bold())
+                        .foregroundColor(Theme.Colors.textPrimary)
+
+                    Text("Logado como \(viewModel.currentUser.displayName)")
+                        .font(.footnote)
+                        .foregroundColor(Theme.Colors.textSecondary)
+                        .multilineTextAlignment(.center)
+                }
+
+                HStack(spacing: 10) {
+                    Button {
+                        try? container.authRepository.signOut()
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "rectangle.portrait.and.arrow.right")
+                            Text("Deslogar")
+                        }
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundColor(Theme.Colors.textPrimary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.black.opacity(0.22))
+                        .cornerRadius(12)
+                    }
+
+                    Button {
+                        showCreate = true
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "plus.circle.fill")
+                            Text("Nova aposta")
+                        }
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundColor(Theme.Colors.textPrimary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.black.opacity(0.22))
+                        .cornerRadius(12)
+                    }
+                }
+            }
+        }
+    }
+}

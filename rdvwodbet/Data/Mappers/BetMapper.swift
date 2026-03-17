@@ -4,7 +4,14 @@ enum BetMapper {
 
     static func toDomain(_ dto: BetDTO) -> Bet {
         let prize = PrizeType(rawValue: dto.prizeType) ?? .water
-        let status = BetStatus(rawValue: dto.status) ?? .open
+        let baseStatus = BetStatus(rawValue: dto.status) ?? .open
+        let resolvedStatus: BetStatus
+
+        if (baseStatus == .open || baseStatus == .disputed) && dto.expiresAt < Date() {
+            resolvedStatus = .expired
+        } else {
+            resolvedStatus = baseStatus
+        }
 
         return Bet(
             id: dto.id,
@@ -15,7 +22,8 @@ enum BetMapper {
             wodTitle: dto.wodTitle,
             prizeType: prize,
             prizeOtherDescription: dto.prizeOtherDescription,
-            status: status,
+            status: resolvedStatus,
+            expiresAt: dto.expiresAt,
             proposedWinnerUserId: dto.proposedWinnerUserId,
             athleteAConfirmed: dto.athleteAConfirmed,
             athleteBConfirmed: dto.athleteBConfirmed,
@@ -32,6 +40,7 @@ enum BetMapper {
             "wodTitle": bet.wodTitle,
             "prizeType": bet.prizeType.rawValue,
             "status": bet.status.rawValue,
+            "expiresAt": bet.expiresAt,
             "athleteAConfirmed": bet.athleteAConfirmed,
             "athleteBConfirmed": bet.athleteBConfirmed
         ]
@@ -43,4 +52,3 @@ enum BetMapper {
         return data
     }
 }
-

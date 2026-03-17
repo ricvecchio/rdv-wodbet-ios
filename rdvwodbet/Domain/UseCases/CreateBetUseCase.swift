@@ -14,7 +14,8 @@ final class CreateBetUseCase {
         athleteBUserId: String,
         wodTitle: String,
         prizeType: PrizeType,
-        prizeOtherDescription: String?
+        prizeOtherDescription: String?,
+        expiresAt: Date
     ) -> AnyPublisher<Void, AppError> {
 
         do {
@@ -41,6 +42,7 @@ final class CreateBetUseCase {
             prizeType: prizeType,
             prizeOtherDescription: prizeOtherDescription,
             status: .open,
+            expiresAt: expiresAt,
             proposedWinnerUserId: nil,
             athleteAConfirmed: false,
             athleteBConfirmed: false,

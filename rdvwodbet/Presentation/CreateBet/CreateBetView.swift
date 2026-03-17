@@ -4,7 +4,7 @@ struct CreateBetView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: CreateBetViewModel
     @FocusState private var focusedField: Field?
-    
+
     enum Field {
         case wodTitle, prizeDescription
     }
@@ -71,6 +71,22 @@ struct CreateBetView: View {
                             }
                         }
 
+                        GlassCard {
+                            Text("Expiração")
+                                .font(.headline)
+                                .foregroundColor(Theme.Colors.textPrimary)
+
+                            DatePicker(
+                                "Data de expiração",
+                                selection: $viewModel.expiresAt,
+                                in: Date()...,
+                                displayedComponents: [.date]
+                            )
+                            .datePickerStyle(.graphical)
+                            .tint(Theme.Colors.textPrimary)
+                            .foregroundColor(Theme.Colors.textPrimary)
+                        }
+
                         if let msg = viewModel.errorMessage {
                             Text(msg)
                                 .font(.footnote)
@@ -89,7 +105,7 @@ struct CreateBetView: View {
                             ) {
                                 viewModel.save { dismiss() }
                             }
-                            
+
                             Button("Cancelar") {
                                 dismiss()
                             }
@@ -98,7 +114,6 @@ struct CreateBetView: View {
                             .padding(.vertical, 8)
                         }
                         .padding(.top, 6)
-
                     }
                     .frame(maxWidth: Theme.Layout.cardMaxWidth)
                     .padding(.top, 16)
@@ -133,8 +148,6 @@ struct CreateBetView: View {
         }
         .tint(.white)
     }
-
-    // MARK: - Helpers
 
     private func selectedUserName(_ userId: String?) -> String {
         guard let userId,

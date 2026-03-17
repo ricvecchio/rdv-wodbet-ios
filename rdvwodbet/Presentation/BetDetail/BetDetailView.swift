@@ -53,7 +53,6 @@ struct BetDetailView: View {
         AppBackgroundView {
             ScrollView {
                 VStack(spacing: 14) {
-
                     GlassCard {
                         VStack(spacing: 12) {
                             Text("Confronto")
@@ -145,6 +144,18 @@ struct BetDetailView: View {
                                         .foregroundColor(Theme.Colors.textSecondary)
 
                                     Text(viewModel.bet.createdAt, style: .date)
+                                        .font(.subheadline)
+                                        .foregroundColor(Theme.Colors.textPrimary)
+
+                                    Spacer()
+                                }
+
+                                HStack {
+                                    Text("Expira em:")
+                                        .font(.subheadline)
+                                        .foregroundColor(Theme.Colors.textSecondary)
+
+                                    Text(viewModel.bet.expiresAt, style: .date)
                                         .font(.subheadline)
                                         .foregroundColor(Theme.Colors.textPrimary)
 

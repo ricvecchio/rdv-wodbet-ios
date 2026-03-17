@@ -4,14 +4,12 @@ import Combine
 @MainActor
 final class CreateBetViewModel: ObservableObject {
     @Published var users: [AppUser] = []
-
-    // Agora o picker trabalha com IDs
     @Published var selectedAUserId: String?
     @Published var selectedBUserId: String?
-
     @Published var wodTitle: String = ""
     @Published var prizeType: PrizeType = .water
     @Published var prizeOtherDescription: String = ""
+    @Published var expiresAt: Date = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
 
     @Published var isSaving: Bool = false
     @Published var errorMessage: String?
@@ -22,9 +20,11 @@ final class CreateBetViewModel: ObservableObject {
 
     private var cancellables = Set<AnyCancellable>()
 
-    init(currentUser: AppUser,
-         userRepository: UserRepository,
-         createBetUseCase: CreateBetUseCase) {
+    init(
+        currentUser: AppUser,
+        userRepository: UserRepository,
+        createBetUseCase: CreateBetUseCase
+    ) {
         self.currentUser = currentUser
         self.userRepository = userRepository
         self.createBetUseCase = createBetUseCase
@@ -40,8 +40,9 @@ final class CreateBetViewModel: ObservableObject {
                     self?.errorMessage = err.localizedDescription
                 }
             } receiveValue: { [weak self] users in
-                // Opcional: ordenar por nome
-                self?.users = users.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
+                self?.users = users.sorted {
+                    $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
+                }
             }
             .store(in: &cancellables)
     }
@@ -63,12 +64,14 @@ final class CreateBetViewModel: ObservableObject {
             athleteBUserId: bId,
             wodTitle: wodTitle,
             prizeType: prizeType,
-            prizeOtherDescription: otherDesc
+            prizeOtherDescription: otherDesc,
+            expiresAt: expiresAt
         )
         .receive(on: DispatchQueue.main)
         .sink { [weak self] completion in
             guard let self else { return }
             self.isSaving = false
+
             if case .failure(let err) = completion {
                 self.errorMessage = err.localizedDescription
             } else {
@@ -78,4 +81,3 @@ final class CreateBetViewModel: ObservableObject {
         .store(in: &cancellables)
     }
 }
-

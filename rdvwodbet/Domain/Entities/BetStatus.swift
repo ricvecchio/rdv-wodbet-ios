@@ -5,6 +5,7 @@ enum BetStatus: String, Codable {
     case finished
     case canceled
     case disputed
+    case expired
 
     var label: String {
         switch self {
@@ -12,6 +13,7 @@ enum BetStatus: String, Codable {
         case .finished: return "🏆 Finalizada"
         case .canceled: return "❌ Cancelada"
         case .disputed: return "⚔️ Disputa"
+        case .expired: return "⌛ Expirada"
         }
     }
 }

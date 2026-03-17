@@ -10,6 +10,7 @@ struct BetDTO {
     let prizeType: String
     let prizeOtherDescription: String?
     let status: String
+    let expiresAt: Date
     let proposedWinnerUserId: String?
     let athleteAConfirmed: Bool
     let athleteBConfirmed: Bool
@@ -25,6 +26,7 @@ struct BetDTO {
         self.prizeType = data["prizeType"] as? String ?? PrizeType.water.rawValue
         self.prizeOtherDescription = data["prizeOtherDescription"] as? String
         self.status = data["status"] as? String ?? BetStatus.open.rawValue
+        self.expiresAt = (data["expiresAt"] as? Date) ?? Date()
         self.proposedWinnerUserId = data["proposedWinnerUserId"] as? String
         self.athleteAConfirmed = data["athleteAConfirmed"] as? Bool ?? false
         self.athleteBConfirmed = data["athleteBConfirmed"] as? Bool ?? false

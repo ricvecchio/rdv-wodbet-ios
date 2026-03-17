@@ -53,12 +53,6 @@ final class FirestoreBetDataSource {
         .eraseToAnyPublisher()
     }
 
-    /// Confirma o vencedor proposto usando transação (evita race condition).
-    /// Regra:
-    /// - precisa existir proposedWinnerUserId
-    /// - confirmer precisa ser athleteAUserId ou athleteBUserId
-    /// - marca athleteAConfirmed / athleteBConfirmed
-    /// - se ambos confirmarem: status = finished e confirmedWinnerUserId = proposedWinnerUserId
     func confirmWinnerTransaction(betId: String, confirmerUserId: String) -> AnyPublisher<Void, AppError> {
         Future { promise in
             let ref = self.db.collection("bets").document(betId)
@@ -88,6 +82,8 @@ final class FirestoreBetDataSource {
 
                 let athleteAUserId = data["athleteAUserId"] as? String ?? ""
                 let athleteBUserId = data["athleteBUserId"] as? String ?? ""
+                let expiresAt = (data["expiresAt"] as? Date) ?? Date()
+                let now = Date()
 
                 if confirmerUserId != athleteAUserId && confirmerUserId != athleteBUserId {
                     errorPointer?.pointee = NSError(
@@ -98,11 +94,20 @@ final class FirestoreBetDataSource {
                     return nil
                 }
 
+                if expiresAt < now {
+                    errorPointer?.pointee = NSError(
+                        domain: "FirestoreBetDataSource",
+                        code: 4,
+                        userInfo: [NSLocalizedDescriptionKey: "Esta aposta está expirada."]
+                    )
+                    return nil
+                }
+
                 let proposedWinnerUserId = data["proposedWinnerUserId"] as? String
                 guard let proposedWinnerUserId, !proposedWinnerUserId.isEmpty else {
                     errorPointer?.pointee = NSError(
                         domain: "FirestoreBetDataSource",
-                        code: 4,
+                        code: 5,
                         userInfo: [NSLocalizedDescriptionKey: "Nenhum vencedor foi proposto ainda."]
                     )
                     return nil
@@ -112,10 +117,10 @@ final class FirestoreBetDataSource {
                 let athleteBConfirmed = data["athleteBConfirmed"] as? Bool ?? false
                 let status = data["status"] as? String ?? BetStatus.open.rawValue
 
-                if status == BetStatus.finished.rawValue || status == BetStatus.canceled.rawValue {
+                if status == BetStatus.finished.rawValue || status == BetStatus.canceled.rawValue || status == BetStatus.expired.rawValue {
                     errorPointer?.pointee = NSError(
                         domain: "FirestoreBetDataSource",
-                        code: 5,
+                        code: 6,
                         userInfo: [NSLocalizedDescriptionKey: "Esta aposta não pode mais ser confirmada."]
                     )
                     return nil
@@ -156,8 +161,6 @@ final class FirestoreBetDataSource {
         .eraseToAnyPublisher()
     }
 
-    /// Rejeita o vencedor proposto e coloca a aposta em disputa.
-    /// Também limpa confirmações anteriores e remove vencedor confirmado.
     func rejectWinnerTransaction(betId: String, rejectorUserId: String) -> AnyPublisher<Void, AppError> {
         Future { promise in
             let ref = self.db.collection("bets").document(betId)
@@ -188,6 +191,7 @@ final class FirestoreBetDataSource {
                 let athleteAUserId = data["athleteAUserId"] as? String ?? ""
                 let athleteBUserId = data["athleteBUserId"] as? String ?? ""
                 let status = data["status"] as? String ?? BetStatus.open.rawValue
+                let expiresAt = (data["expiresAt"] as? Date) ?? Date()
 
                 if rejectorUserId != athleteAUserId && rejectorUserId != athleteBUserId {
                     errorPointer?.pointee = NSError(
@@ -198,7 +202,7 @@ final class FirestoreBetDataSource {
                     return nil
                 }
 
-                if status == BetStatus.finished.rawValue || status == BetStatus.canceled.rawValue {
+                if status == BetStatus.finished.rawValue || status == BetStatus.canceled.rawValue || status == BetStatus.expired.rawValue || expiresAt < Date() {
                     errorPointer?.pointee = NSError(
                         domain: "FirestoreBetDataSource",
                         code: 13,
@@ -229,9 +233,6 @@ final class FirestoreBetDataSource {
         .eraseToAnyPublisher()
     }
 
-    /// Cancela a aposta com validação de regra:
-    /// - apenas o criador pode cancelar
-    /// - aposta finalizada/cancelada não pode mais ser cancelada
     func cancelBetTransaction(betId: String, requesterUserId: String) -> AnyPublisher<Void, AppError> {
         Future { promise in
             let ref = self.db.collection("bets").document(betId)
@@ -271,7 +272,7 @@ final class FirestoreBetDataSource {
                     return nil
                 }
 
-                if status == BetStatus.finished.rawValue || status == BetStatus.canceled.rawValue {
+                if status == BetStatus.finished.rawValue || status == BetStatus.canceled.rawValue || status == BetStatus.expired.rawValue {
                     errorPointer?.pointee = NSError(
                         domain: "FirestoreBetDataSource",
                         code: 23,
