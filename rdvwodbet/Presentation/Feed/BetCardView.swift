@@ -33,6 +33,10 @@ struct BetCardView: View {
         bet.status == .open || bet.status == .disputed
     }
 
+    private func percentageValue(for athleteId: String) -> CGFloat {
+        CGFloat(bet.votePercentage(for: athleteId)) / 100
+    }
+
     private func fillColor(for athleteId: String) -> Color {
         let current = bet.votePercentage(for: athleteId)
         let other = athleteId == bet.athleteAUserId ? athleteBPercentage : athleteAPercentage
@@ -44,6 +48,10 @@ struct BetCardView: View {
         } else {
             return Color.black.opacity(0.30)
         }
+    }
+
+    private func trackColor() -> Color {
+        Color.black.opacity(0.10)
     }
 
     private func borderColor(for athleteId: String) -> Color {
@@ -178,6 +186,7 @@ struct BetCardView: View {
         athleteId: String
     ) -> some View {
         let selected = isSelected(athleteId)
+        let percentage = percentageValue(for: athleteId)
 
         Button {
             if isVotingEnabled {
@@ -186,7 +195,14 @@ struct BetCardView: View {
         } label: {
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(fillColor(for: athleteId))
+                    .fill(trackColor())
+
+                GeometryReader { geometry in
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(fillColor(for: athleteId))
+                        .frame(width: max(geometry.size.width * percentage, percentage > 0 ? 6 : 0))
+                }
+                .allowsHitTesting(false)
 
                 HStack(spacing: 8) {
                     Image(systemName: "figure.strengthtraining.traditional")
@@ -212,6 +228,7 @@ struct BetCardView: View {
                 .padding(.vertical, 8)
             }
             .frame(height: 34)
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .stroke(
