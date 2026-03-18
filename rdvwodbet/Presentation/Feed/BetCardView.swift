@@ -13,6 +13,14 @@ struct BetCardView: View {
         : bet.prizeType.displayName
     }
 
+    private var athleteAPercentage: Int {
+        bet.votePercentage(for: bet.athleteAUserId)
+    }
+
+    private var athleteBPercentage: Int {
+        bet.votePercentage(for: bet.athleteBUserId)
+    }
+
     private func isSelected(_ athleteId: String) -> Bool {
         bet.voteOfUser(currentUserId) == athleteId
     }
@@ -23,6 +31,66 @@ struct BetCardView: View {
 
     private var isVotingEnabled: Bool {
         bet.status == .open || bet.status == .disputed
+    }
+
+    private func fillColor(for athleteId: String) -> Color {
+        let current = bet.votePercentage(for: athleteId)
+        let other = athleteId == bet.athleteAUserId ? athleteBPercentage : athleteAPercentage
+
+        if current > other {
+            return Color.green.opacity(0.28)
+        } else if current < other {
+            return Color.red.opacity(0.24)
+        } else {
+            return Color.black.opacity(0.30)
+        }
+    }
+
+    private func borderColor(for athleteId: String) -> Color {
+        if isSelected(athleteId) {
+            return Color.green.opacity(0.75)
+        }
+
+        let current = bet.votePercentage(for: athleteId)
+        let other = athleteId == bet.athleteAUserId ? athleteBPercentage : athleteAPercentage
+
+        if current > other {
+            return Color.green.opacity(0.45)
+        } else if current < other {
+            return Color.red.opacity(0.35)
+        } else {
+            return Color.clear
+        }
+    }
+
+    private func iconColor(for athleteId: String) -> Color {
+        if isSelected(athleteId) {
+            return .green
+        }
+
+        let current = bet.votePercentage(for: athleteId)
+        let other = athleteId == bet.athleteAUserId ? athleteBPercentage : athleteAPercentage
+
+        if current > other {
+            return Color.green.opacity(0.9)
+        } else if current < other {
+            return Color.red.opacity(0.8)
+        } else {
+            return isVotingEnabled ? Theme.Colors.textPrimary : .gray.opacity(0.5)
+        }
+    }
+
+    private func percentageColor(for athleteId: String) -> Color {
+        let current = bet.votePercentage(for: athleteId)
+        let other = athleteId == bet.athleteAUserId ? athleteBPercentage : athleteAPercentage
+
+        if current > other {
+            return Color.green.opacity(0.95)
+        } else if current < other {
+            return Color.red.opacity(0.9)
+        } else {
+            return Theme.Colors.textPrimary
+        }
     }
 
     var body: some View {
@@ -72,7 +140,7 @@ struct BetCardView: View {
             x: 0,
             y: Theme.Effects.cardShadowY
         )
-        .padding(.vertical, iOS: 6)
+        .padding(.vertical, 6)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -110,9 +178,6 @@ struct BetCardView: View {
         athleteId: String
     ) -> some View {
         let selected = isSelected(athleteId)
-        let percentage = max(bet.votePercentage(for: athleteId), selected ? 8 : 0)
-        let fillOpacity: Double = selected ? 0.32 : (isVotingEnabled ? 0.18 : 0.10)
-        let borderOpacity: Double = selected ? 0.80 : 0.0
 
         Button {
             if isVotingEnabled {
@@ -120,22 +185,13 @@ struct BetCardView: View {
             }
         } label: {
             ZStack(alignment: .leading) {
-                GeometryReader { geometry in
-                    let width = geometry.size.width * CGFloat(percentage) / 100
-
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(selected ? Color.green.opacity(fillOpacity) : Color.white.opacity(fillOpacity))
-                        .frame(width: max(width, 0))
-                }
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(fillColor(for: athleteId))
 
                 HStack(spacing: 8) {
                     Image(systemName: "figure.strengthtraining.traditional")
                         .font(.caption.weight(.semibold))
-                        .foregroundColor(
-                            selected
-                            ? .green
-                            : (isVotingEnabled ? Theme.Colors.textPrimary : .gray.opacity(0.5))
-                        )
+                        .foregroundColor(iconColor(for: athleteId))
 
                     Text(athleteName)
                         .font(.caption.weight(.semibold))
@@ -150,32 +206,22 @@ struct BetCardView: View {
 
                     Text(percentageText(for: athleteId))
                         .font(.caption2.weight(.bold))
-                        .foregroundColor(Theme.Colors.textPrimary)
+                        .foregroundColor(percentageColor(for: athleteId))
                 }
                 .padding(.horizontal, 12)
-                .padding(.vertical, 10)
+                .padding(.vertical, 8)
             }
-            .frame(height: 42)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(isVotingEnabled ? Color.black.opacity(0.26) : Color.black.opacity(0.14))
-            )
+            .frame(height: 34)
             .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .stroke(
-                        selected ? Color.green.opacity(borderOpacity) : Color.white.opacity(0.06),
-                        lineWidth: selected ? 1.2 : 1
+                        selected ? Color.green.opacity(0.85) : borderColor(for: athleteId),
+                        lineWidth: selected ? 1.3 : 1
                     )
             )
         }
         .buttonStyle(.plain)
         .disabled(!isVotingEnabled)
         .opacity(isVotingEnabled ? 1.0 : 0.72)
-    }
-}
-
-private extension View {
-    func padding(_ edges: Edge.Set = .all, iOS value: CGFloat) -> some View {
-        self.padding(edges, value)
     }
 }
