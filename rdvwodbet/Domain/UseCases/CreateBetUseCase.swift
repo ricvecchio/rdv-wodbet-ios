@@ -54,7 +54,8 @@ final class CreateBetUseCase {
             proposedWinnerUserId: nil,
             athleteAConfirmed: false,
             athleteBConfirmed: false,
-            confirmedWinnerUserId: nil
+            confirmedWinnerUserId: nil,
+            votesByUserId: [:]
         )
 
         return betRepository.createBet(bet)

@@ -51,18 +51,29 @@ struct FeedView: View {
                                                     proposeWinnerUseCase: container.proposeWinnerUseCase,
                                                     confirmWinnerUseCase: container.confirmWinnerUseCase,
                                                     rejectWinnerUseCase: container.rejectWinnerUseCase,
-                                                    cancelBetUseCase: container.cancelBetUseCase
+                                                    cancelBetUseCase: container.cancelBetUseCase,
+                                                    voteOnBetUseCase: container.voteOnBetUseCase
                                                 ),
                                                 athleteAName: aName,
-                                                athleteBName: bName
+                                                athleteBName: bName,
+                                                usersById: viewModel.usersById
                                             )
                                         } label: {
                                             BetCardView(
                                                 bet: bet,
                                                 athleteAName: aName,
-                                                athleteBName: bName
+                                                athleteBName: bName,
+                                                currentUserId: viewModel.currentUser.id,
+                                                onVote: { athleteId in
+                                                    viewModel.vote(
+                                                        betId: bet.id,
+                                                        athleteId: athleteId,
+                                                        container: container
+                                                    )
+                                                }
                                             )
                                         }
+                                        .buttonStyle(.plain)
                                     }
                                 }
                             }
@@ -148,7 +159,7 @@ struct FeedView: View {
                 showCreate = true
             }
         }
-        .frame(maxWidth: Theme.Layout.cardMaxWidth) // 🔑 LIMITA largura igual aos cards
+        .frame(maxWidth: Theme.Layout.cardMaxWidth)
         .padding(.horizontal, 12)
         .padding(.top, 10)
         .padding(.bottom, 14)
@@ -173,8 +184,8 @@ struct FeedView: View {
                     .minimumScaleFactor(0.85)
             }
             .foregroundColor(Theme.Colors.textPrimary)
-            .frame(maxWidth: .infinity) // agora funciona corretamente dentro do limite
-            .frame(height: 36) // 🔽 menor altura
+            .frame(maxWidth: .infinity)
+            .frame(height: 36)
             .background(Color.black.opacity(0.55))
             .cornerRadius(10)
         }

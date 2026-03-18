@@ -16,11 +16,11 @@ struct BetDTO {
     let athleteAConfirmed: Bool
     let athleteBConfirmed: Bool
     let confirmedWinnerUserId: String?
+    let votesByUserId: [String: String]
 
     init(id: String, data: [String: Any]) {
         self.id = id
 
-        // 🔥 Correção principal: suportar Timestamp corretamente
         if let ts = data["createdAt"] as? Timestamp {
             self.createdAt = ts.dateValue()
         } else if let date = data["createdAt"] as? Date {
@@ -48,5 +48,17 @@ struct BetDTO {
         self.athleteAConfirmed = data["athleteAConfirmed"] as? Bool ?? false
         self.athleteBConfirmed = data["athleteBConfirmed"] as? Bool ?? false
         self.confirmedWinnerUserId = data["confirmedWinnerUserId"] as? String
+
+        if let votes = data["votes"] as? [String: String] {
+            self.votesByUserId = votes
+        } else if let votes = data["votes"] as? [String: Any] {
+            self.votesByUserId = votes.reduce(into: [:]) { partialResult, element in
+                if let votedUserId = element.value as? String {
+                    partialResult[element.key] = votedUserId
+                }
+            }
+        } else {
+            self.votesByUserId = [:]
+        }
     }
 }

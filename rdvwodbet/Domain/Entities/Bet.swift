@@ -15,4 +15,24 @@ struct Bet: Identifiable, Equatable {
     let athleteAConfirmed: Bool
     let athleteBConfirmed: Bool
     let confirmedWinnerUserId: String?
+    let votesByUserId: [String: String]
+
+    var totalVotes: Int {
+        votesByUserId.count
+    }
+
+    func voteCount(for athleteUserId: String) -> Int {
+        votesByUserId.values.filter { $0 == athleteUserId }.count
+    }
+
+    func votePercentage(for athleteUserId: String) -> Int {
+        let total = totalVotes
+        guard total > 0 else { return 0 }
+        let count = voteCount(for: athleteUserId)
+        return Int((Double(count) / Double(total) * 100).rounded())
+    }
+
+    func voteOfUser(_ userId: String) -> String? {
+        votesByUserId[userId]
+    }
 }

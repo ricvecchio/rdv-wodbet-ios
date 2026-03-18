@@ -13,6 +13,7 @@ final class BetDetailViewModel: ObservableObject {
     private let confirmWinnerUseCase: ConfirmWinnerUseCase
     private let rejectWinnerUseCase: RejectWinnerUseCase
     private let cancelBetUseCase: CancelBetUseCase
+    private let voteOnBetUseCase: VoteOnBetUseCase
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -22,7 +23,8 @@ final class BetDetailViewModel: ObservableObject {
         proposeWinnerUseCase: ProposeWinnerUseCase,
         confirmWinnerUseCase: ConfirmWinnerUseCase,
         rejectWinnerUseCase: RejectWinnerUseCase,
-        cancelBetUseCase: CancelBetUseCase
+        cancelBetUseCase: CancelBetUseCase,
+        voteOnBetUseCase: VoteOnBetUseCase
     ) {
         self.bet = bet
         self.currentUser = currentUser
@@ -30,6 +32,7 @@ final class BetDetailViewModel: ObservableObject {
         self.confirmWinnerUseCase = confirmWinnerUseCase
         self.rejectWinnerUseCase = rejectWinnerUseCase
         self.cancelBetUseCase = cancelBetUseCase
+        self.voteOnBetUseCase = voteOnBetUseCase
     }
 
     var isAthlete: Bool {
@@ -52,6 +55,31 @@ final class BetDetailViewModel: ObservableObject {
         }
 
         return false
+    }
+
+    var currentUserVote: String? {
+        bet.voteOfUser(currentUser.id)
+    }
+
+    func vote(for votedAthleteUserId: String) {
+        errorMessage = nil
+        isWorking = true
+
+        voteOnBetUseCase.execute(
+            betId: bet.id,
+            voterUserId: currentUser.id,
+            votedAthleteUserId: votedAthleteUserId
+        )
+        .receive(on: DispatchQueue.main)
+        .sink { [weak self] completion in
+            guard let self else { return }
+            self.isWorking = false
+
+            if case .failure(let err) = completion {
+                self.errorMessage = err.localizedDescription
+            }
+        } receiveValue: { _ in }
+        .store(in: &cancellables)
     }
 
     func proposeWinner(userId: String) {

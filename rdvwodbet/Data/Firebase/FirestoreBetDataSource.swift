@@ -82,7 +82,7 @@ final class FirestoreBetDataSource {
 
                 let athleteAUserId = data["athleteAUserId"] as? String ?? ""
                 let athleteBUserId = data["athleteBUserId"] as? String ?? ""
-                let expiresAt = (data["expiresAt"] as? Date) ?? Date()
+                let expiresAt = self.readDate(from: data["expiresAt"]) ?? Date()
                 let now = Date()
 
                 if confirmerUserId != athleteAUserId && confirmerUserId != athleteBUserId {
@@ -191,7 +191,7 @@ final class FirestoreBetDataSource {
                 let athleteAUserId = data["athleteAUserId"] as? String ?? ""
                 let athleteBUserId = data["athleteBUserId"] as? String ?? ""
                 let status = data["status"] as? String ?? BetStatus.open.rawValue
-                let expiresAt = (data["expiresAt"] as? Date) ?? Date()
+                let expiresAt = self.readDate(from: data["expiresAt"]) ?? Date()
 
                 if rejectorUserId != athleteAUserId && rejectorUserId != athleteBUserId {
                     errorPointer?.pointee = NSError(
@@ -297,5 +297,113 @@ final class FirestoreBetDataSource {
             })
         }
         .eraseToAnyPublisher()
+    }
+
+    func voteOnBetTransaction(
+        betId: String,
+        voterUserId: String,
+        votedAthleteUserId: String
+    ) -> AnyPublisher<Void, AppError> {
+        Future { promise in
+            let ref = self.db.collection("bets").document(betId)
+
+            self.db.runTransaction({ transaction, errorPointer -> Any? in
+                let snap: DocumentSnapshot
+
+                do {
+                    snap = try transaction.getDocument(ref)
+                } catch {
+                    errorPointer?.pointee = NSError(
+                        domain: "FirestoreBetDataSource",
+                        code: 30,
+                        userInfo: [NSLocalizedDescriptionKey: "Não foi possível ler a aposta."]
+                    )
+                    return nil
+                }
+
+                guard let data = snap.data() else {
+                    errorPointer?.pointee = NSError(
+                        domain: "FirestoreBetDataSource",
+                        code: 31,
+                        userInfo: [NSLocalizedDescriptionKey: "Aposta não encontrada."]
+                    )
+                    return nil
+                }
+
+                let athleteAUserId = data["athleteAUserId"] as? String ?? ""
+                let athleteBUserId = data["athleteBUserId"] as? String ?? ""
+                let status = data["status"] as? String ?? BetStatus.open.rawValue
+                let expiresAt = self.readDate(from: data["expiresAt"]) ?? Date()
+
+                guard votedAthleteUserId == athleteAUserId || votedAthleteUserId == athleteBUserId else {
+                    errorPointer?.pointee = NSError(
+                        domain: "FirestoreBetDataSource",
+                        code: 32,
+                        userInfo: [NSLocalizedDescriptionKey: "Voto inválido para esta aposta."]
+                    )
+                    return nil
+                }
+
+                if status != BetStatus.open.rawValue && status != BetStatus.disputed.rawValue {
+                    errorPointer?.pointee = NSError(
+                        domain: "FirestoreBetDataSource",
+                        code: 33,
+                        userInfo: [NSLocalizedDescriptionKey: "Esta aposta não aceita mais votação."]
+                    )
+                    return nil
+                }
+
+                if expiresAt < Date() {
+                    errorPointer?.pointee = NSError(
+                        domain: "FirestoreBetDataSource",
+                        code: 34,
+                        userInfo: [NSLocalizedDescriptionKey: "Esta aposta está expirada."]
+                    )
+                    return nil
+                }
+
+                var currentVotes = self.readVotes(from: data["votes"])
+                currentVotes[voterUserId] = votedAthleteUserId
+
+                transaction.setData(["votes": currentVotes], forDocument: ref, merge: true)
+                return nil
+
+            }, completion: { _, err in
+                if let err {
+                    promise(.failure(.network(err.localizedDescription)))
+                } else {
+                    promise(.success(()))
+                }
+            })
+        }
+        .eraseToAnyPublisher()
+    }
+
+    private func readDate(from value: Any?) -> Date? {
+        if let timestamp = value as? Timestamp {
+            return timestamp.dateValue()
+        }
+
+        if let date = value as? Date {
+            return date
+        }
+
+        return nil
+    }
+
+    private func readVotes(from value: Any?) -> [String: String] {
+        if let votes = value as? [String: String] {
+            return votes
+        }
+
+        if let votes = value as? [String: Any] {
+            return votes.reduce(into: [:]) { partialResult, element in
+                if let votedAthleteUserId = element.value as? String {
+                    partialResult[element.key] = votedAthleteUserId
+                }
+            }
+        }
+
+        return [:]
     }
 }

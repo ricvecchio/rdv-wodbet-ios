@@ -41,4 +41,12 @@ final class FirestoreBetRepository: BetRepository {
     func cancelBet(betId: String, requesterUserId: String) -> AnyPublisher<Void, AppError> {
         dataSource.cancelBetTransaction(betId: betId, requesterUserId: requesterUserId)
     }
+
+    func voteOnBet(betId: String, voterUserId: String, votedAthleteUserId: String) -> AnyPublisher<Void, AppError> {
+        dataSource.voteOnBetTransaction(
+            betId: betId,
+            voterUserId: voterUserId,
+            votedAthleteUserId: votedAthleteUserId
+        )
+    }
 }

@@ -6,6 +6,7 @@ struct BetDetailView: View {
 
     let athleteAName: String
     let athleteBName: String
+    let usersById: [String: AppUser]
 
     private var prizeText: String {
         viewModel.bet.prizeType == .other

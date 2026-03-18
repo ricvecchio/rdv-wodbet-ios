@@ -40,8 +40,6 @@ final class FeedViewModel: ObservableObject {
                 guard let self else { return }
 
                 self.usersById = Dictionary(uniqueKeysWithValues: users.map { ($0.id, $0) })
-
-                // Feed público: exibir todas as apostas
                 self.bets = bets.sorted(by: { $0.createdAt > $1.createdAt })
             }
             .store(in: &cancellables)
@@ -49,5 +47,24 @@ final class FeedViewModel: ObservableObject {
 
     func displayName(for userId: String) -> String {
         usersById[userId]?.displayName ?? "—"
+    }
+
+    func vote(
+        betId: String,
+        athleteId: String,
+        container: AppDIContainer
+    ) {
+        container.voteOnBetUseCase.execute(
+            betId: betId,
+            voterUserId: currentUser.id,
+            votedAthleteUserId: athleteId
+        )
+        .receive(on: DispatchQueue.main)
+        .sink { [weak self] completion in
+            if case .failure(let err) = completion {
+                self?.errorMessage = err.localizedDescription
+            }
+        } receiveValue: { _ in }
+        .store(in: &cancellables)
     }
 }

@@ -31,7 +31,8 @@ enum BetMapper {
             proposedWinnerUserId: dto.proposedWinnerUserId,
             athleteAConfirmed: dto.athleteAConfirmed,
             athleteBConfirmed: dto.athleteBConfirmed,
-            confirmedWinnerUserId: dto.confirmedWinnerUserId
+            confirmedWinnerUserId: dto.confirmedWinnerUserId,
+            votesByUserId: dto.votesByUserId
         )
     }
 
@@ -46,7 +47,8 @@ enum BetMapper {
             "status": bet.status.rawValue,
             "expiresAt": bet.expiresAt,
             "athleteAConfirmed": bet.athleteAConfirmed,
-            "athleteBConfirmed": bet.athleteBConfirmed
+            "athleteBConfirmed": bet.athleteBConfirmed,
+            "votes": bet.votesByUserId
         ]
 
         data["prizeOtherDescription"] = bet.prizeOtherDescription as Any
