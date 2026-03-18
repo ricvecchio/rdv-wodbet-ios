@@ -62,6 +62,10 @@ final class FeedViewModel: ObservableObject {
         .receive(on: DispatchQueue.main)
         .sink { [weak self] completion in
             if case .failure(let err) = completion {
+                // 🔥 IGNORA ERRO DE VOTAÇÃO BLOQUEADA
+                if err.localizedDescription.contains("não aceita mais votação") {
+                    return
+                }
                 self?.errorMessage = err.localizedDescription
             }
         } receiveValue: { _ in }

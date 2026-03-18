@@ -21,12 +21,18 @@ struct BetCardView: View {
         "\(bet.votePercentage(for: athleteId))%"
     }
 
+    private var isVotingEnabled: Bool {
+        bet.status == .open || bet.status == .disputed
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 12) {
+
+            // 🔥 CENTRALIZADO E DESTACADO
             Text("\(athleteAName) & \(athleteBName)")
                 .font(.headline.bold())
                 .foregroundColor(.black)
-                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .center)
 
             infoRow(label: "Status", value: bet.status.label)
             infoRow(label: "WOD", value: bet.wodTitle)
@@ -43,7 +49,7 @@ struct BetCardView: View {
                     athleteId: bet.athleteBUserId
                 )
             }
-            .padding(.top, 2)
+            .padding(.top, 4)
         }
         .padding(.vertical, 14)
         .padding(.horizontal, 14)
@@ -93,16 +99,26 @@ struct BetCardView: View {
         let selected = isSelected(athleteId)
 
         Button {
-            onVote(athleteId)
+            if isVotingEnabled {
+                onVote(athleteId)
+            }
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: "figure.strengthtraining.traditional")
                     .font(.caption.weight(.semibold))
-                    .foregroundColor(selected ? .green : Theme.Colors.textPrimary)
+                    .foregroundColor(
+                        selected
+                        ? .green
+                        : (isVotingEnabled ? Theme.Colors.textPrimary : .gray.opacity(0.5))
+                    )
 
                 Text(athleteName)
                     .font(.caption)
-                    .foregroundColor(Theme.Colors.textPrimary)
+                    .foregroundColor(
+                        isVotingEnabled
+                        ? Theme.Colors.textPrimary
+                        : .gray.opacity(0.6)
+                    )
                     .lineLimit(1)
 
                 Text(percentageText(for: athleteId))
@@ -114,14 +130,24 @@ struct BetCardView: View {
             .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(selected ? Color.green.opacity(0.22) : Color.black.opacity(0.20))
+                    .fill(
+                        selected
+                        ? Color.green.opacity(0.25)
+                        : (isVotingEnabled
+                           ? Color.black.opacity(0.35)
+                           : Color.black.opacity(0.15))
+                    )
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .stroke(selected ? Color.green.opacity(0.7) : Color.clear, lineWidth: 1)
+                    .stroke(
+                        selected ? Color.green.opacity(0.8) : Color.clear,
+                        lineWidth: 1
+                    )
             )
         }
         .buttonStyle(.plain)
+        .disabled(!isVotingEnabled)
     }
 }
 
