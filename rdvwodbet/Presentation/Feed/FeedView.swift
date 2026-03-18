@@ -112,7 +112,7 @@ struct FeedView: View {
 
     @ViewBuilder
     private func headerSection() -> some View {
-        VStack(spacing: 2) {
+        VStack(spacing: 4) {
             Text("Apostas")
                 .font(.headline.bold())
                 .foregroundColor(Theme.Colors.textPrimary)
@@ -125,8 +125,8 @@ struct FeedView: View {
                 .lineLimit(1)
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 14)
-        .padding(.bottom, 8)
+        .padding(.top, 20)
+        .padding(.bottom, 10)
         .padding(.horizontal, 16)
         .background(Color.black.opacity(0.45))
     }
@@ -150,8 +150,8 @@ struct FeedView: View {
         }
         .frame(maxWidth: Theme.Layout.cardMaxWidth) // 🔑 LIMITA largura igual aos cards
         .padding(.horizontal, 12)
-        .padding(.top, 8)
-        .padding(.bottom, 10)
+        .padding(.top, 10)
+        .padding(.bottom, 14)
         .frame(maxWidth: .infinity)
         .background(Color.black.opacity(0.45))
     }
