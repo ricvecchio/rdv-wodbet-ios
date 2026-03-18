@@ -5,9 +5,13 @@ enum BetMapper {
     static func toDomain(_ dto: BetDTO) -> Bet {
         let prize = PrizeType(rawValue: dto.prizeType) ?? .water
         let baseStatus = BetStatus(rawValue: dto.status) ?? .open
-        let resolvedStatus: BetStatus
 
-        if (baseStatus == .open || baseStatus == .disputed) && dto.expiresAt < Date() {
+        let calendar = Calendar.current
+        let now = Date()
+        let isExpiredByDay = calendar.startOfDay(for: dto.expiresAt) < calendar.startOfDay(for: now)
+
+        let resolvedStatus: BetStatus
+        if (baseStatus == .open || baseStatus == .disputed) && isExpiredByDay {
             resolvedStatus = .expired
         } else {
             resolvedStatus = baseStatus

@@ -32,6 +32,14 @@ final class CreateBetUseCase {
             return Fail(error: .unknown).eraseToAnyPublisher()
         }
 
+        let calendar = Calendar.current
+        let expirationAtEndOfDay = calendar.date(
+            bySettingHour: 23,
+            minute: 59,
+            second: 59,
+            of: expiresAt
+        ) ?? expiresAt
+
         let bet = Bet(
             id: UUID().uuidString,
             createdAt: Date(),
@@ -42,7 +50,7 @@ final class CreateBetUseCase {
             prizeType: prizeType,
             prizeOtherDescription: prizeOtherDescription,
             status: .open,
-            expiresAt: expiresAt,
+            expiresAt: expirationAtEndOfDay,
             proposedWinnerUserId: nil,
             athleteAConfirmed: false,
             athleteBConfirmed: false,
