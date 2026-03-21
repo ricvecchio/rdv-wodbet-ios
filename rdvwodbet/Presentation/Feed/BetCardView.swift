@@ -114,16 +114,18 @@ struct BetCardView: View {
             infoRow(label: "WOD", value: bet.wodTitle)
             infoRow(label: "Prêmio", value: prizeText)
 
-            VStack(spacing: 8) {
+            HStack(alignment: .center, spacing: 8) {
                 pollRow(
                     athleteName: athleteAName,
                     athleteId: bet.athleteAUserId
                 )
+                .frame(maxWidth: .infinity)
 
                 pollRow(
                     athleteName: athleteBName,
                     athleteId: bet.athleteBUserId
                 )
+                .frame(maxWidth: .infinity)
             }
             .padding(.top, 4)
         }
@@ -204,7 +206,7 @@ struct BetCardView: View {
                 }
                 .allowsHitTesting(false)
 
-                HStack(spacing: 8) {
+                HStack(spacing: 6) {
                     Image(systemName: "figure.strengthtraining.traditional")
                         .font(.caption.weight(.semibold))
                         .foregroundColor(iconColor(for: athleteId))
@@ -217,16 +219,18 @@ struct BetCardView: View {
                             : .gray.opacity(0.6)
                         )
                         .lineLimit(1)
+                        .minimumScaleFactor(0.80)
 
-                    Spacer(minLength: 8)
+                    Spacer(minLength: 4)
 
                     Text(percentageText(for: athleteId))
                         .font(.caption2.weight(.bold))
                         .foregroundColor(percentageColor(for: athleteId))
                 }
-                .padding(.horizontal, 12)
+                .padding(.horizontal, 10)
                 .padding(.vertical, 8)
             }
+            .frame(maxWidth: .infinity)
             .frame(height: 34)
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay(
