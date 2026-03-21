@@ -6,6 +6,8 @@ struct FeedView: View {
 
     @State private var showCreate = false
 
+    private let feedCardMaxWidth: CGFloat = 340
+
     var body: some View {
         NavigationStack {
             AppBackgroundView {
@@ -13,7 +15,7 @@ struct FeedView: View {
                     VStack(spacing: 0) {
                         headerSection()
 
-                        ScrollView {
+                        ScrollView(.vertical, showsIndicators: false) {
                             VStack(spacing: 14) {
                                 if viewModel.bets.isEmpty {
                                     GlassCard {
@@ -23,7 +25,7 @@ struct FeedView: View {
                                             .multilineTextAlignment(.center)
                                             .frame(maxWidth: .infinity)
 
-                                        Text("Crie a primeira aposta do WOD do dia 😄")
+                                        Text("Crie a primeira aposta do WOD do dia ")
                                             .font(.footnote)
                                             .foregroundColor(Theme.Colors.textSecondary)
                                             .multilineTextAlignment(.center)
@@ -38,6 +40,7 @@ struct FeedView: View {
                                         }
                                         .padding(.top, 8)
                                     }
+                                    .frame(maxWidth: feedCardMaxWidth)
                                 } else {
                                     ForEach(viewModel.bets) { bet in
                                         let aName = viewModel.displayName(for: bet.athleteAUserId)
@@ -72,17 +75,18 @@ struct FeedView: View {
                                                     )
                                                 }
                                             )
+                                            .frame(maxWidth: feedCardMaxWidth)
                                         }
                                         .buttonStyle(.plain)
                                     }
                                 }
                             }
-                            .frame(maxWidth: Theme.Layout.cardMaxWidth)
                             .padding(.top, 12)
-                            .padding(.bottom, 88)
-                            .padding(.horizontal, 12)
+                            .padding(.bottom, 24)
+                            .padding(.horizontal, 10)
                             .frame(maxWidth: .infinity, alignment: .center)
                         }
+                        .clipped()
                     }
 
                     if let msg = viewModel.errorMessage {
@@ -105,6 +109,7 @@ struct FeedView: View {
             .toolbar(.hidden, for: .navigationBar)
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 footerSection()
+                    .background(Color.black.opacity(0.65))
             }
             .sheet(isPresented: $showCreate) {
                 AppBackgroundView {
@@ -139,7 +144,7 @@ struct FeedView: View {
         .padding(.top, 20)
         .padding(.bottom, 10)
         .padding(.horizontal, 16)
-        .background(Color.black.opacity(0.45))
+        .background(Color.black.opacity(0.65))
     }
 
     @ViewBuilder
@@ -164,7 +169,6 @@ struct FeedView: View {
         .padding(.top, 10)
         .padding(.bottom, 14)
         .frame(maxWidth: .infinity)
-        .background(Color.black.opacity(0.45))
     }
 
     @ViewBuilder
