@@ -10,7 +10,7 @@ enum BetStatus: String, Codable {
     var label: String {
         switch self {
         case .open: return "⏳ Aberta"
-        case .finished: return "🏆 Finalizada"
+        case .finished: return "🏁 Finalizada"
         case .canceled: return "❌ Cancelada"
         case .disputed: return "⚔️ Disputa"
         case .expired: return "⌛ Expirada"

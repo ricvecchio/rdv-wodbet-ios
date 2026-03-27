@@ -21,6 +21,30 @@ struct BetCardView: View {
         bet.votePercentage(for: bet.athleteBUserId)
     }
 
+    private var winnerName: String? {
+        if let confirmedWinnerUserId = bet.confirmedWinnerUserId {
+            if confirmedWinnerUserId == bet.athleteAUserId {
+                return athleteAName
+            }
+
+            if confirmedWinnerUserId == bet.athleteBUserId {
+                return athleteBName
+            }
+        }
+
+        if let proposedWinnerUserId = bet.proposedWinnerUserId {
+            if proposedWinnerUserId == bet.athleteAUserId {
+                return athleteAName
+            }
+
+            if proposedWinnerUserId == bet.athleteBUserId {
+                return athleteBName
+            }
+        }
+
+        return nil
+    }
+
     private func isSelected(_ athleteId: String) -> Bool {
         bet.voteOfUser(currentUserId) == athleteId
     }
@@ -114,6 +138,10 @@ struct BetCardView: View {
             infoRow(label: "WOD", value: bet.wodTitle)
             infoRow(label: "Prêmio", value: prizeText)
 
+            if bet.status == .finished, let winnerName {
+                winnerRow(name: winnerName)
+            }
+
             HStack(alignment: .center, spacing: 8) {
                 pollRow(
                     athleteName: athleteAName,
@@ -175,6 +203,22 @@ struct BetCardView: View {
                 .foregroundColor(.black)
 
             Text(value)
+                .font(.subheadline)
+                .foregroundColor(Theme.Colors.textPrimary)
+
+            Spacer(minLength: 0)
+        }
+    }
+
+    @ViewBuilder
+    private func winnerRow(name: String) -> some View {
+        HStack(alignment: .top, spacing: 6) {
+
+            Text("Vencedor: 🏆")
+                .font(.subheadline.bold())
+                .foregroundColor(.black)
+
+            Text(name)
                 .font(.subheadline)
                 .foregroundColor(Theme.Colors.textPrimary)
 
