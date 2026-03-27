@@ -56,6 +56,22 @@ struct BetDetailView: View {
         return "Ainda não definido"
     }
 
+    private var selectedWinnerName: String {
+        guard let selectedWinnerUserId = viewModel.selectedWinnerUserId else {
+            return "Ainda não definido"
+        }
+
+        if selectedWinnerUserId == viewModel.bet.athleteAUserId {
+            return athleteAName
+        }
+
+        if selectedWinnerUserId == viewModel.bet.athleteBUserId {
+            return athleteBName
+        }
+
+        return "Ainda não definido"
+    }
+
     private var athleteAResultText: String {
         let trimmed = viewModel.bet.athleteAResult?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return trimmed.isEmpty ? "-" : trimmed
@@ -66,12 +82,18 @@ struct BetDetailView: View {
         return trimmed.isEmpty ? "-" : trimmed
     }
 
+    private func winnerButtonTitle(for userId: String) -> String {
+        userId == viewModel.bet.athleteAUserId ? athleteAName : athleteBName
+    }
+
+    private func isWinnerSelected(_ userId: String) -> Bool {
+        viewModel.selectedWinnerUserId == userId
+    }
+
     var body: some View {
         AppBackgroundView {
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 14) {
-
-                    // MARK: - Confronto
                     GlassCard {
                         VStack(spacing: 12) {
                             Text("Confronto")
@@ -107,7 +129,6 @@ struct BetDetailView: View {
                     }
                     .frame(maxWidth: detailCardMaxWidth)
 
-                    // MARK: - Detalhes
                     GlassCard {
                         VStack(spacing: 8) {
                             HStack {
@@ -125,7 +146,6 @@ struct BetDetailView: View {
                             Divider()
 
                             VStack(alignment: .leading, spacing: 8) {
-
                                 HStack {
                                     Text("WOD:")
                                         .font(.subheadline.bold())
@@ -174,49 +194,172 @@ struct BetDetailView: View {
                     }
                     .frame(maxWidth: detailCardMaxWidth)
 
-                    // MARK: - Resultado
                     GlassCard {
                         VStack(spacing: 12) {
                             Text("Resultado")
                                 .font(.headline)
                                 .foregroundColor(.black)
 
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Text("\(athleteAName):")
-                                    Text(athleteAResultText)
+                            if viewModel.canEditBetResult {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        Text("\(athleteAName):")
+                                            .font(.subheadline.bold())
+                                            .foregroundColor(.black)
 
-                                    Spacer()
+                                        TextField("Ex.: 5:45 ou WO", text: $viewModel.athleteAResultInput)
+                                            .textInputAutocapitalization(.characters)
+                                            .autocorrectionDisabled(true)
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 10)
+                                            .background(Color.black.opacity(0.18))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 10)
+                                                    .stroke(Theme.Colors.border.opacity(0.7), lineWidth: 1)
+                                            )
+                                            .cornerRadius(10)
+                                            .foregroundColor(Theme.Colors.textPrimary)
+                                    }
 
-                                    Text("\(athleteBName):")
-                                    Text(athleteBResultText)
-                                }
-                                .foregroundColor(Theme.Colors.textPrimary)
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        Text("\(athleteBName):")
+                                            .font(.subheadline.bold())
+                                            .foregroundColor(.black)
 
-                                if viewModel.bet.status == .finished {
-                                    HStack(spacing: 6) {
-                                        Image(systemName: "trophy.fill")
-                                            .foregroundColor(.yellow)
+                                        TextField("Ex.: 6:02 ou WO", text: $viewModel.athleteBResultInput)
+                                            .textInputAutocapitalization(.characters)
+                                            .autocorrectionDisabled(true)
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 10)
+                                            .background(Color.black.opacity(0.18))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 10)
+                                                    .stroke(Theme.Colors.border.opacity(0.7), lineWidth: 1)
+                                            )
+                                            .cornerRadius(10)
+                                            .foregroundColor(Theme.Colors.textPrimary)
+                                    }
 
+                                    VStack(spacing: 8) {
+                                        Text("Vencedor da aposta")
+                                            .font(.subheadline)
+                                            .foregroundColor(Theme.Colors.textSecondary)
+
+                                        HStack(spacing: 10) {
+                                            Button {
+                                                viewModel.selectWinner(userId: viewModel.bet.athleteAUserId)
+                                            } label: {
+                                                Text(winnerButtonTitle(for: viewModel.bet.athleteAUserId))
+                                                    .font(.subheadline.weight(.semibold))
+                                                    .foregroundColor(Theme.Colors.textPrimary)
+                                                    .frame(maxWidth: .infinity)
+                                                    .padding(.vertical, 10)
+                                                    .background(
+                                                        RoundedRectangle(cornerRadius: 10)
+                                                            .fill(
+                                                                isWinnerSelected(viewModel.bet.athleteAUserId)
+                                                                ? Color.white.opacity(0.20)
+                                                                : Color.black.opacity(0.18)
+                                                            )
+                                                    )
+                                                    .overlay(
+                                                        RoundedRectangle(cornerRadius: 10)
+                                                            .stroke(
+                                                                isWinnerSelected(viewModel.bet.athleteAUserId)
+                                                                ? Theme.Colors.textPrimary
+                                                                : Theme.Colors.border.opacity(0.7),
+                                                                lineWidth: 1
+                                                            )
+                                                    )
+                                            }
+                                            .disabled(viewModel.isWorking)
+
+                                            Button {
+                                                viewModel.selectWinner(userId: viewModel.bet.athleteBUserId)
+                                            } label: {
+                                                Text(winnerButtonTitle(for: viewModel.bet.athleteBUserId))
+                                                    .font(.subheadline.weight(.semibold))
+                                                    .foregroundColor(Theme.Colors.textPrimary)
+                                                    .frame(maxWidth: .infinity)
+                                                    .padding(.vertical, 10)
+                                                    .background(
+                                                        RoundedRectangle(cornerRadius: 10)
+                                                            .fill(
+                                                                isWinnerSelected(viewModel.bet.athleteBUserId)
+                                                                ? Color.white.opacity(0.20)
+                                                                : Color.black.opacity(0.18)
+                                                            )
+                                                    )
+                                                    .overlay(
+                                                        RoundedRectangle(cornerRadius: 10)
+                                                            .stroke(
+                                                                isWinnerSelected(viewModel.bet.athleteBUserId)
+                                                                ? Theme.Colors.textPrimary
+                                                                : Theme.Colors.border.opacity(0.7),
+                                                                lineWidth: 1
+                                                            )
+                                                    )
+                                            }
+                                            .disabled(viewModel.isWorking)
+                                        }
+                                    }
+
+                                    HStack {
                                         Text("Vencedor:")
                                             .font(.subheadline.bold())
                                             .foregroundColor(.black)
 
-                                        Text(displayWinnerName)
+                                        Text(selectedWinnerName)
                                             .foregroundColor(Theme.Colors.textPrimary)
 
                                         Spacer()
                                     }
-                                } else {
+                                }
+                            } else {
+                                VStack(alignment: .leading, spacing: 8) {
                                     HStack {
-                                        Text("Vencedor da aposta:")
+                                        Text("\(athleteAName):")
                                             .font(.subheadline.bold())
                                             .foregroundColor(.black)
 
-                                        Text(proposedWinnerName)
+                                        Text(athleteAResultText)
                                             .foregroundColor(Theme.Colors.textPrimary)
 
                                         Spacer()
+
+                                        Text("\(athleteBName):")
+                                            .font(.subheadline.bold())
+                                            .foregroundColor(.black)
+
+                                        Text(athleteBResultText)
+                                            .foregroundColor(Theme.Colors.textPrimary)
+                                    }
+
+                                    if viewModel.bet.status == .finished {
+                                        HStack(spacing: 6) {
+                                            Image(systemName: "trophy.fill")
+                                                .foregroundColor(.yellow)
+
+                                            Text("Vencedor:")
+                                                .font(.subheadline.bold())
+                                                .foregroundColor(.black)
+
+                                            Text(displayWinnerName)
+                                                .foregroundColor(Theme.Colors.textPrimary)
+
+                                            Spacer()
+                                        }
+                                    } else {
+                                        HStack {
+                                            Text("Vencedor da aposta:")
+                                                .font(.subheadline.bold())
+                                                .foregroundColor(.black)
+
+                                            Text(proposedWinnerName)
+                                                .foregroundColor(Theme.Colors.textPrimary)
+
+                                            Spacer()
+                                        }
                                     }
                                 }
                             }
@@ -224,16 +367,23 @@ struct BetDetailView: View {
                     }
                     .frame(maxWidth: detailCardMaxWidth)
 
-                    // MARK: - Botões
+                    if let msg = viewModel.errorMessage {
+                        Text(msg)
+                            .font(.footnote)
+                            .foregroundColor(Theme.Colors.error)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(Capsule().fill(Color.black.opacity(0.55)))
+                            .frame(maxWidth: detailCardMaxWidth)
+                    }
+
                     HStack(spacing: 10) {
-
                         if viewModel.currentUser.id == viewModel.bet.createdByUserId,
-                           viewModel.bet.status == .open {
-
+                           (viewModel.bet.status == .open || viewModel.bet.status == .disputed) {
                             Button {
                                 viewModel.cancel()
                             } label: {
-                                Text("Cancelar")
+                                Text("Cancelar aposta")
                                     .font(.subheadline.bold())
                                     .foregroundColor(.white)
                                     .frame(maxWidth: .infinity)
@@ -241,6 +391,26 @@ struct BetDetailView: View {
                                     .background(Color.red)
                                     .cornerRadius(12)
                             }
+                            .disabled(viewModel.isWorking)
+                        }
+
+                        if viewModel.canEditBetResult {
+                            Button {
+                                viewModel.saveBetResult()
+                            } label: {
+                                Text(viewModel.isWorking ? "Salvando..." : "Salvar resultado")
+                                    .font(.subheadline.bold())
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 42)
+                                    .background(
+                                        viewModel.isWorking || !viewModel.canSaveBetResult
+                                        ? Color.gray.opacity(0.6)
+                                        : Color.black.opacity(0.75)
+                                    )
+                                    .cornerRadius(12)
+                            }
+                            .disabled(viewModel.isWorking || !viewModel.canSaveBetResult)
                         }
 
                         Button {
@@ -257,8 +427,32 @@ struct BetDetailView: View {
                     }
                     .frame(maxWidth: detailCardMaxWidth)
                 }
+                .padding(.top, 12)
+                .padding(.bottom, 28)
                 .padding(.horizontal, 10)
+                .frame(maxWidth: .infinity, alignment: .center)
+            }
+            .clipped()
+        }
+        .navigationTitle("Detalhes da Aposta")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    dismiss()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                            .font(.headline)
+
+                        Text("Voltar")
+                            .font(.subheadline)
+                    }
+                    .foregroundColor(Theme.Colors.textPrimary)
+                }
             }
         }
+        .appNavigationBarStyle()
+        .background(Color.clear)
     }
 }
