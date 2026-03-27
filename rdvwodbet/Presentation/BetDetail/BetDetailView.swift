@@ -373,67 +373,6 @@ struct BetDetailView: View {
                         }
                     }
 
-                    GlassCard {
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("Andamento do Resultado")
-                                .font(.headline)
-                                .foregroundColor(Theme.Colors.textPrimary)
-
-                            HStack {
-                                Text("Vencedor proposto:")
-                                    .font(.subheadline)
-                                    .foregroundColor(Theme.Colors.textSecondary)
-
-                                Text(proposedWinnerName)
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundColor(Theme.Colors.textPrimary)
-
-                                Spacer()
-                            }
-
-                            HStack {
-                                Text("Vencedor confirmado:")
-                                    .font(.subheadline)
-                                    .foregroundColor(Theme.Colors.textSecondary)
-
-                                Text(confirmedWinnerName)
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundColor(Theme.Colors.textPrimary)
-
-                                Spacer()
-                            }
-
-                            Divider()
-                                .background(Theme.Colors.border)
-
-                            VStack(alignment: .leading, spacing: 6) {
-                                HStack {
-                                    Text("\(athleteAName):")
-                                        .font(.subheadline)
-                                        .foregroundColor(Theme.Colors.textSecondary)
-
-                                    Text(confirmationLabel(forAthleteConfirmed: viewModel.bet.athleteAConfirmed))
-                                        .font(.subheadline.weight(.semibold))
-                                        .foregroundColor(Theme.Colors.textPrimary)
-
-                                    Spacer()
-                                }
-
-                                HStack {
-                                    Text("\(athleteBName):")
-                                        .font(.subheadline)
-                                        .foregroundColor(Theme.Colors.textSecondary)
-
-                                    Text(confirmationLabel(forAthleteConfirmed: viewModel.bet.athleteBConfirmed))
-                                        .font(.subheadline.weight(.semibold))
-                                        .foregroundColor(Theme.Colors.textPrimary)
-
-                                    Spacer()
-                                }
-                            }
-                        }
-                    }
-
                     if (viewModel.bet.status == .open || viewModel.bet.status == .disputed),
                        viewModel.isAthlete {
 
@@ -499,33 +438,6 @@ struct BetDetailView: View {
                         }
                     }
 
-                    if viewModel.currentUser.id == viewModel.bet.createdByUserId,
-                       (viewModel.bet.status == .open || viewModel.bet.status == .disputed) {
-
-                        GlassCard {
-                            VStack(spacing: 8) {
-                                Text("Ações do Criador")
-                                    .font(.headline)
-                                    .foregroundColor(Theme.Colors.textPrimary)
-
-                                Button(role: .destructive) {
-                                    viewModel.cancel()
-                                } label: {
-                                    HStack {
-                                        Image(systemName: "xmark.circle.fill")
-                                        Text("Cancelar aposta")
-                                    }
-                                    .font(.subheadline)
-                                    .padding(.vertical, 10)
-                                    .frame(maxWidth: .infinity)
-                                }
-                                .disabled(viewModel.isWorking)
-                                .background(Color.red.opacity(0.2))
-                                .cornerRadius(10)
-                            }
-                        }
-                    }
-
                     if let msg = viewModel.errorMessage {
                         Text(msg)
                             .font(.footnote)
@@ -536,12 +448,33 @@ struct BetDetailView: View {
                             .frame(maxWidth: Theme.Layout.cardMaxWidth)
                     }
 
-                    PrimaryButton(
-                        title: "Voltar",
-                        isDisabled: false,
-                        widthStyle: .card
-                    ) {
-                        dismiss()
+                    VStack(spacing: 10) {
+                        if viewModel.currentUser.id == viewModel.bet.createdByUserId,
+                           (viewModel.bet.status == .open || viewModel.bet.status == .disputed) {
+
+                            Button {
+                                viewModel.cancel()
+                            } label: {
+                                Text("Cancelar aposta")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 14)
+                                            .fill(Color.red)
+                                    )
+                            }
+                            .disabled(viewModel.isWorking)
+                        }
+
+                        PrimaryButton(
+                            title: "Voltar",
+                            isDisabled: false,
+                            widthStyle: .card
+                        ) {
+                            dismiss()
+                        }
                     }
                     .padding(.top, 10)
                 }
