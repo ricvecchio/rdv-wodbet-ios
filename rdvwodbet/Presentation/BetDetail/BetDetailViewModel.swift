@@ -159,10 +159,11 @@ final class BetDetailViewModel: ObservableObject {
             guard let self else { return }
 
             self.bet = self.bet.updating(
+                status: .finished,
                 proposedWinnerUserId: selectedWinnerUserId,
-                athleteAConfirmed: false,
-                athleteBConfirmed: false,
-                confirmedWinnerUserId: .some(nil),
+                athleteAConfirmed: true,
+                athleteBConfirmed: true,
+                confirmedWinnerUserId: selectedWinnerUserId,
                 athleteAResult: .some(athleteAResult),
                 athleteBResult: .some(athleteBResult)
             )

@@ -385,9 +385,10 @@ final class FirestoreBetDataSource {
                     "athleteAResult": normalizedAthleteAResult,
                     "athleteBResult": normalizedAthleteBResult,
                     "proposedWinnerUserId": winnerUserId,
-                    "athleteAConfirmed": false,
-                    "athleteBConfirmed": false,
-                    "confirmedWinnerUserId": NSNull()
+                    "confirmedWinnerUserId": winnerUserId,
+                    "athleteAConfirmed": true,
+                    "athleteBConfirmed": true,
+                    "status": BetStatus.finished.rawValue
                 ]
 
                 transaction.setData(updates, forDocument: ref, merge: true)

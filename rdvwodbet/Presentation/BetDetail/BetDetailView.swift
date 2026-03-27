@@ -48,6 +48,30 @@ struct BetDetailView: View {
         return "Ainda não confirmado"
     }
 
+    private var displayWinnerName: String {
+        if let confirmedWinnerUserId = viewModel.bet.confirmedWinnerUserId {
+            if confirmedWinnerUserId == viewModel.bet.athleteAUserId {
+                return athleteAName
+            }
+
+            if confirmedWinnerUserId == viewModel.bet.athleteBUserId {
+                return athleteBName
+            }
+        }
+
+        if let proposedWinnerUserId = viewModel.bet.proposedWinnerUserId {
+            if proposedWinnerUserId == viewModel.bet.athleteAUserId {
+                return athleteAName
+            }
+
+            if proposedWinnerUserId == viewModel.bet.athleteBUserId {
+                return athleteBName
+            }
+        }
+
+        return "Ainda não definido"
+    }
+
     private var selectedWinnerName: String {
         guard let selectedWinnerUserId = viewModel.selectedWinnerUserId else {
             return "Ainda não definido"
@@ -91,7 +115,7 @@ struct BetDetailView: View {
                             Text("Confronto")
                                 .font(.headline)
                                 .foregroundColor(.black)
-                            
+
                             HStack(spacing: 20) {
                                 VStack(spacing: 4) {
                                     Text("👤")
@@ -197,6 +221,67 @@ struct BetDetailView: View {
                                 }
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                    .frame(maxWidth: detailCardMaxWidth)
+
+                    GlassCard {
+                        VStack(spacing: 12) {
+                            Text("Resultado")
+                                .font(.headline)
+                                .foregroundColor(.black)
+
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack(alignment: .top) {
+                                    Text("\(athleteAName):")
+                                        .font(.subheadline)
+                                        .foregroundColor(Theme.Colors.textSecondary)
+
+                                    Text(athleteAResultText)
+                                        .font(.subheadline.weight(.semibold))
+                                        .foregroundColor(Theme.Colors.textPrimary)
+
+                                    Spacer()
+
+                                    Text("\(athleteBName):")
+                                        .font(.subheadline)
+                                        .foregroundColor(Theme.Colors.textSecondary)
+
+                                    Text(athleteBResultText)
+                                        .font(.subheadline.weight(.semibold))
+                                        .foregroundColor(Theme.Colors.textPrimary)
+                                }
+
+                                if viewModel.bet.status == .finished {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "trophy.fill")
+                                            .font(.subheadline)
+                                            .foregroundColor(.yellow)
+
+                                        Text("Vencedor:")
+                                            .font(.subheadline)
+                                            .foregroundColor(Theme.Colors.textSecondary)
+
+                                        Text(displayWinnerName)
+                                            .font(.subheadline.weight(.semibold))
+                                            .foregroundColor(Theme.Colors.textPrimary)
+
+                                        Spacer()
+                                    }
+                                } else {
+                                    HStack {
+                                        Text("Vencedor da aposta:")
+                                            .font(.subheadline)
+                                            .foregroundColor(Theme.Colors.textSecondary)
+
+                                        Text(proposedWinnerName)
+                                            .font(.subheadline.weight(.semibold))
+                                            .foregroundColor(Theme.Colors.textPrimary)
+
+                                        Spacer()
+                                    }
+                                }
+                            }
                         }
                     }
                     .frame(maxWidth: detailCardMaxWidth)
@@ -411,7 +496,6 @@ struct BetDetailView: View {
                     }
 
                     HStack(spacing: 10) {
-
                         if viewModel.currentUser.id == viewModel.bet.createdByUserId,
                            (viewModel.bet.status == .open || viewModel.bet.status == .disputed) {
 
