@@ -90,8 +90,8 @@ struct BetDetailView: View {
                         VStack(spacing: 12) {
                             Text("Confronto")
                                 .font(.headline)
-                                .foregroundColor(Theme.Colors.textPrimary)
-
+                                .foregroundColor(.black)
+                            
                             HStack(spacing: 20) {
                                 VStack(spacing: 4) {
                                     Text("👤")
@@ -129,7 +129,7 @@ struct BetDetailView: View {
                             HStack {
                                 Text("Status")
                                     .font(.headline)
-                                    .foregroundColor(Theme.Colors.textPrimary)
+                                    .foregroundColor(.black)
 
                                 Spacer()
 
@@ -201,53 +201,12 @@ struct BetDetailView: View {
                     }
                     .frame(maxWidth: detailCardMaxWidth)
 
-                    GlassCard {
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("Resultado")
-                                .font(.headline)
-                                .foregroundColor(Theme.Colors.textPrimary)
-
-                            HStack(alignment: .top) {
-                                Text("\(athleteAName):")
-                                    .font(.subheadline)
-                                    .foregroundColor(Theme.Colors.textSecondary)
-
-                                Text(athleteAResultText)
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundColor(Theme.Colors.textPrimary)
-
-                                Spacer()
-
-                                Text("\(athleteBName):")
-                                    .font(.subheadline)
-                                    .foregroundColor(Theme.Colors.textSecondary)
-
-                                Text(athleteBResultText)
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundColor(Theme.Colors.textPrimary)
-                            }
-
-                            HStack {
-                                Text("Vencedor da aposta:")
-                                    .font(.subheadline)
-                                    .foregroundColor(Theme.Colors.textSecondary)
-
-                                Text(proposedWinnerName)
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundColor(Theme.Colors.textPrimary)
-
-                                Spacer()
-                            }
-                        }
-                    }
-                    .frame(maxWidth: detailCardMaxWidth)
-
                     if viewModel.canEditBetResult {
                         GlassCard {
                             VStack(spacing: 12) {
-                                Text("Atualizar Resultado")
+                                Text("Resultado")
                                     .font(.headline)
-                                    .foregroundColor(Theme.Colors.textPrimary)
+                                    .foregroundColor(.black)
 
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("\(athleteAName)")
