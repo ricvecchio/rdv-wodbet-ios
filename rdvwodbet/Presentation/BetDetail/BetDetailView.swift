@@ -8,6 +8,8 @@ struct BetDetailView: View {
     let athleteBName: String
     let usersById: [String: AppUser]
 
+    private let detailCardMaxWidth: CGFloat = 340
+
     private var prizeText: String {
         viewModel.bet.prizeType == .other
         ? (viewModel.bet.prizeOtherDescription ?? "Outro")
@@ -72,10 +74,6 @@ struct BetDetailView: View {
         return trimmed.isEmpty ? "-" : trimmed
     }
 
-    private func confirmationLabel(forAthleteConfirmed isConfirmed: Bool) -> String {
-        isConfirmed ? "✅ Confirmado" : "⏳ Aguardando"
-    }
-
     private func winnerButtonTitle(for userId: String) -> String {
         userId == viewModel.bet.athleteAUserId ? athleteAName : athleteBName
     }
@@ -86,7 +84,7 @@ struct BetDetailView: View {
 
     var body: some View {
         AppBackgroundView {
-            ScrollView {
+            ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 14) {
                     GlassCard {
                         VStack(spacing: 12) {
@@ -124,6 +122,7 @@ struct BetDetailView: View {
                             .padding(.vertical, 8)
                         }
                     }
+                    .frame(maxWidth: detailCardMaxWidth)
 
                     GlassCard {
                         VStack(spacing: 8) {
@@ -200,6 +199,7 @@ struct BetDetailView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
+                    .frame(maxWidth: detailCardMaxWidth)
 
                     GlassCard {
                         VStack(alignment: .leading, spacing: 10) {
@@ -240,6 +240,7 @@ struct BetDetailView: View {
                             }
                         }
                     }
+                    .frame(maxWidth: detailCardMaxWidth)
 
                     if viewModel.canEditBetResult {
                         GlassCard {
@@ -371,6 +372,7 @@ struct BetDetailView: View {
                                 }
                             }
                         }
+                        .frame(maxWidth: detailCardMaxWidth)
                     }
 
                     if (viewModel.bet.status == .open || viewModel.bet.status == .disputed),
@@ -436,6 +438,7 @@ struct BetDetailView: View {
                                 .padding(.top, 4)
                             }
                         }
+                        .frame(maxWidth: detailCardMaxWidth)
                     }
 
                     if let msg = viewModel.errorMessage {
@@ -445,44 +448,53 @@ struct BetDetailView: View {
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
                             .background(Capsule().fill(Color.black.opacity(0.55)))
-                            .frame(maxWidth: Theme.Layout.cardMaxWidth)
+                            .frame(maxWidth: detailCardMaxWidth)
                     }
 
-                    VStack(spacing: 10) {
+                    HStack(spacing: 10) {
+
                         if viewModel.currentUser.id == viewModel.bet.createdByUserId,
                            (viewModel.bet.status == .open || viewModel.bet.status == .disputed) {
 
                             Button {
                                 viewModel.cancel()
                             } label: {
-                                Text("Cancelar aposta")
-                                    .font(.headline)
+                                Text("Cancelar")
+                                    .font(.subheadline.weight(.semibold))
                                     .foregroundColor(.white)
                                     .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 12)
+                                    .frame(height: 42)
                                     .background(
-                                        RoundedRectangle(cornerRadius: 14)
+                                        RoundedRectangle(cornerRadius: 12)
                                             .fill(Color.red)
                                     )
                             }
                             .disabled(viewModel.isWorking)
                         }
 
-                        PrimaryButton(
-                            title: "Voltar",
-                            isDisabled: false,
-                            widthStyle: .card
-                        ) {
+                        Button {
                             dismiss()
+                        } label: {
+                            Text("Voltar")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundColor(Theme.Colors.textPrimary)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 42)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(Color.black.opacity(0.55))
+                                )
                         }
                     }
+                    .frame(maxWidth: detailCardMaxWidth)
                     .padding(.top, 10)
                 }
-                .frame(maxWidth: Theme.Layout.cardMaxWidth)
-                .padding(.top, Theme.Layout.screenContentTopPadding)
+                .padding(.top, 12)
                 .padding(.bottom, 28)
-                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 10)
+                .frame(maxWidth: .infinity, alignment: .center)
             }
+            .clipped()
         }
         .navigationTitle("Detalhes da Aposta")
         .navigationBarTitleDisplayMode(.inline)
