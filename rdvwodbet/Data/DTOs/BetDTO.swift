@@ -17,6 +17,8 @@ struct BetDTO {
     let athleteBConfirmed: Bool
     let confirmedWinnerUserId: String?
     let votesByUserId: [String: String]
+    let athleteAResult: String?
+    let athleteBResult: String?
 
     init(id: String, data: [String: Any]) {
         self.id = id
@@ -48,6 +50,8 @@ struct BetDTO {
         self.athleteAConfirmed = data["athleteAConfirmed"] as? Bool ?? false
         self.athleteBConfirmed = data["athleteBConfirmed"] as? Bool ?? false
         self.confirmedWinnerUserId = data["confirmedWinnerUserId"] as? String
+        self.athleteAResult = data["athleteAResult"] as? String
+        self.athleteBResult = data["athleteBResult"] as? String
 
         if let votes = data["votes"] as? [String: String] {
             self.votesByUserId = votes

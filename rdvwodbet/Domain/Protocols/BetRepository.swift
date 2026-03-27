@@ -9,6 +9,13 @@ protocol BetRepository {
     func confirmWinner(betId: String, confirmerUserId: String) -> AnyPublisher<Void, AppError>
     func rejectWinner(betId: String, rejectorUserId: String) -> AnyPublisher<Void, AppError>
     func cancelBet(betId: String, requesterUserId: String) -> AnyPublisher<Void, AppError>
+    func updateBetResult(
+        betId: String,
+        requesterUserId: String,
+        athleteAResult: String,
+        athleteBResult: String,
+        winnerUserId: String
+    ) -> AnyPublisher<Void, AppError>
 
     func voteOnBet(betId: String, voterUserId: String, votedAthleteUserId: String) -> AnyPublisher<Void, AppError>
 }

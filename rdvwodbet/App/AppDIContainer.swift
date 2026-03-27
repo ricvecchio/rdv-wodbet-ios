@@ -19,5 +19,6 @@ final class AppDIContainer: ObservableObject {
     lazy var confirmWinnerUseCase = ConfirmWinnerUseCase(betRepository: betRepository)
     lazy var rejectWinnerUseCase = RejectWinnerUseCase(betRepository: betRepository)
     lazy var cancelBetUseCase = CancelBetUseCase(betRepository: betRepository)
+    lazy var updateBetResultUseCase = UpdateBetResultUseCase(betRepository: betRepository)
     lazy var voteOnBetUseCase = VoteOnBetUseCase(betRepository: betRepository)
 }

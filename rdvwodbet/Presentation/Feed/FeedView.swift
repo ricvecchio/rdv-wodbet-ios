@@ -25,7 +25,7 @@ struct FeedView: View {
                                             .multilineTextAlignment(.center)
                                             .frame(maxWidth: .infinity)
 
-                                        Text("Crie a primeira aposta do WOD do dia ")
+                                        Text("Crie a primeira aposta do WOD do dia")
                                             .font(.footnote)
                                             .foregroundColor(Theme.Colors.textSecondary)
                                             .multilineTextAlignment(.center)
@@ -42,10 +42,7 @@ struct FeedView: View {
                                     }
                                     .frame(maxWidth: feedCardMaxWidth)
                                 } else {
-                                    ForEach(viewModel.bets) { bet in
-                                        let aName = viewModel.displayName(for: bet.athleteAUserId)
-                                        let bName = viewModel.displayName(for: bet.athleteBUserId)
-
+                                    ForEach(viewModel.bets, id: \.id) { bet in
                                         NavigationLink {
                                             BetDetailView(
                                                 viewModel: BetDetailViewModel(
@@ -55,17 +52,18 @@ struct FeedView: View {
                                                     confirmWinnerUseCase: container.confirmWinnerUseCase,
                                                     rejectWinnerUseCase: container.rejectWinnerUseCase,
                                                     cancelBetUseCase: container.cancelBetUseCase,
+                                                    updateBetResultUseCase: container.updateBetResultUseCase,
                                                     voteOnBetUseCase: container.voteOnBetUseCase
                                                 ),
-                                                athleteAName: aName,
-                                                athleteBName: bName,
+                                                athleteAName: viewModel.displayName(for: bet.athleteAUserId),
+                                                athleteBName: viewModel.displayName(for: bet.athleteBUserId),
                                                 usersById: viewModel.usersById
                                             )
                                         } label: {
                                             BetCardView(
                                                 bet: bet,
-                                                athleteAName: aName,
-                                                athleteBName: bName,
+                                                athleteAName: viewModel.displayName(for: bet.athleteAUserId),
+                                                athleteBName: viewModel.displayName(for: bet.athleteBUserId),
                                                 currentUserId: viewModel.currentUser.id,
                                                 onVote: { athleteId in
                                                     viewModel.vote(

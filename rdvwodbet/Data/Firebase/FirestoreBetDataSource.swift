@@ -299,6 +299,111 @@ final class FirestoreBetDataSource {
         .eraseToAnyPublisher()
     }
 
+    func updateBetResultTransaction(
+        betId: String,
+        requesterUserId: String,
+        athleteAResult: String,
+        athleteBResult: String,
+        winnerUserId: String
+    ) -> AnyPublisher<Void, AppError> {
+        Future { promise in
+            let ref = self.db.collection("bets").document(betId)
+
+            self.db.runTransaction({ transaction, errorPointer -> Any? in
+                let snap: DocumentSnapshot
+
+                do {
+                    snap = try transaction.getDocument(ref)
+                } catch {
+                    errorPointer?.pointee = NSError(
+                        domain: "FirestoreBetDataSource",
+                        code: 24,
+                        userInfo: [NSLocalizedDescriptionKey: "Não foi possível ler a aposta."]
+                    )
+                    return nil
+                }
+
+                guard let data = snap.data() else {
+                    errorPointer?.pointee = NSError(
+                        domain: "FirestoreBetDataSource",
+                        code: 25,
+                        userInfo: [NSLocalizedDescriptionKey: "Aposta não encontrada."]
+                    )
+                    return nil
+                }
+
+                let createdByUserId = data["createdByUserId"] as? String ?? ""
+                let athleteAUserId = data["athleteAUserId"] as? String ?? ""
+                let athleteBUserId = data["athleteBUserId"] as? String ?? ""
+                let status = data["status"] as? String ?? BetStatus.open.rawValue
+
+                let canEdit =
+                    requesterUserId == createdByUserId ||
+                    requesterUserId == athleteAUserId ||
+                    requesterUserId == athleteBUserId
+
+                if !canEdit {
+                    errorPointer?.pointee = NSError(
+                        domain: "FirestoreBetDataSource",
+                        code: 26,
+                        userInfo: [NSLocalizedDescriptionKey: "Somente o criador ou os atletas da aposta podem atualizar o resultado."]
+                    )
+                    return nil
+                }
+
+                if status == BetStatus.finished.rawValue || status == BetStatus.canceled.rawValue || status == BetStatus.expired.rawValue {
+                    errorPointer?.pointee = NSError(
+                        domain: "FirestoreBetDataSource",
+                        code: 27,
+                        userInfo: [NSLocalizedDescriptionKey: "Esta aposta não pode mais ter o resultado alterado."]
+                    )
+                    return nil
+                }
+
+                let normalizedAthleteAResult = athleteAResult.trimmingCharacters(in: .whitespacesAndNewlines)
+                let normalizedAthleteBResult = athleteBResult.trimmingCharacters(in: .whitespacesAndNewlines)
+
+                if normalizedAthleteAResult.isEmpty || normalizedAthleteBResult.isEmpty {
+                    errorPointer?.pointee = NSError(
+                        domain: "FirestoreBetDataSource",
+                        code: 28,
+                        userInfo: [NSLocalizedDescriptionKey: "Preencha o resultado dos dois atletas."]
+                    )
+                    return nil
+                }
+
+                guard winnerUserId == athleteAUserId || winnerUserId == athleteBUserId else {
+                    errorPointer?.pointee = NSError(
+                        domain: "FirestoreBetDataSource",
+                        code: 29,
+                        userInfo: [NSLocalizedDescriptionKey: "O vencedor informado é inválido para esta aposta."]
+                    )
+                    return nil
+                }
+
+                let updates: [String: Any] = [
+                    "athleteAResult": normalizedAthleteAResult,
+                    "athleteBResult": normalizedAthleteBResult,
+                    "proposedWinnerUserId": winnerUserId,
+                    "athleteAConfirmed": false,
+                    "athleteBConfirmed": false,
+                    "confirmedWinnerUserId": NSNull()
+                ]
+
+                transaction.setData(updates, forDocument: ref, merge: true)
+                return nil
+
+            }, completion: { _, err in
+                if let err {
+                    promise(.failure(.network(err.localizedDescription)))
+                } else {
+                    promise(.success(()))
+                }
+            })
+        }
+        .eraseToAnyPublisher()
+    }
+
     func voteOnBetTransaction(
         betId: String,
         voterUserId: String,

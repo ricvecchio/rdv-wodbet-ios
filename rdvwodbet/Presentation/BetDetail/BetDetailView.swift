@@ -46,8 +46,42 @@ struct BetDetailView: View {
         return "Ainda não confirmado"
     }
 
+    private var selectedWinnerName: String {
+        guard let selectedWinnerUserId = viewModel.selectedWinnerUserId else {
+            return "Ainda não definido"
+        }
+
+        if selectedWinnerUserId == viewModel.bet.athleteAUserId {
+            return athleteAName
+        }
+
+        if selectedWinnerUserId == viewModel.bet.athleteBUserId {
+            return athleteBName
+        }
+
+        return "Ainda não definido"
+    }
+
+    private var athleteAResultText: String {
+        let trimmed = viewModel.bet.athleteAResult?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? "-" : trimmed
+    }
+
+    private var athleteBResultText: String {
+        let trimmed = viewModel.bet.athleteBResult?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? "-" : trimmed
+    }
+
     private func confirmationLabel(forAthleteConfirmed isConfirmed: Bool) -> String {
         isConfirmed ? "✅ Confirmado" : "⏳ Aguardando"
+    }
+
+    private func winnerButtonTitle(for userId: String) -> String {
+        userId == viewModel.bet.athleteAUserId ? athleteAName : athleteBName
+    }
+
+    private func isWinnerSelected(_ userId: String) -> Bool {
+        viewModel.selectedWinnerUserId == userId
     }
 
     var body: some View {
@@ -169,6 +203,178 @@ struct BetDetailView: View {
 
                     GlassCard {
                         VStack(alignment: .leading, spacing: 10) {
+                            Text("Resultado")
+                                .font(.headline)
+                                .foregroundColor(Theme.Colors.textPrimary)
+
+                            HStack(alignment: .top) {
+                                Text("\(athleteAName):")
+                                    .font(.subheadline)
+                                    .foregroundColor(Theme.Colors.textSecondary)
+
+                                Text(athleteAResultText)
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundColor(Theme.Colors.textPrimary)
+
+                                Spacer()
+
+                                Text("\(athleteBName):")
+                                    .font(.subheadline)
+                                    .foregroundColor(Theme.Colors.textSecondary)
+
+                                Text(athleteBResultText)
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundColor(Theme.Colors.textPrimary)
+                            }
+
+                            HStack {
+                                Text("Vencedor da aposta:")
+                                    .font(.subheadline)
+                                    .foregroundColor(Theme.Colors.textSecondary)
+
+                                Text(proposedWinnerName)
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundColor(Theme.Colors.textPrimary)
+
+                                Spacer()
+                            }
+                        }
+                    }
+
+                    if viewModel.canEditBetResult {
+                        GlassCard {
+                            VStack(spacing: 12) {
+                                Text("Atualizar Resultado")
+                                    .font(.headline)
+                                    .foregroundColor(Theme.Colors.textPrimary)
+
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("\(athleteAName)")
+                                        .font(.subheadline)
+                                        .foregroundColor(Theme.Colors.textSecondary)
+
+                                    TextField("Ex.: 5:45 ou WO", text: $viewModel.athleteAResultInput)
+                                        .textInputAutocapitalization(.characters)
+                                        .autocorrectionDisabled(true)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 10)
+                                        .background(Color.black.opacity(0.18))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 10)
+                                                .stroke(Theme.Colors.border.opacity(0.7), lineWidth: 1)
+                                        )
+                                        .cornerRadius(10)
+                                        .foregroundColor(Theme.Colors.textPrimary)
+                                }
+
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("\(athleteBName)")
+                                        .font(.subheadline)
+                                        .foregroundColor(Theme.Colors.textSecondary)
+
+                                    TextField("Ex.: 6:02 ou WO", text: $viewModel.athleteBResultInput)
+                                        .textInputAutocapitalization(.characters)
+                                        .autocorrectionDisabled(true)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 10)
+                                        .background(Color.black.opacity(0.18))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 10)
+                                                .stroke(Theme.Colors.border.opacity(0.7), lineWidth: 1)
+                                        )
+                                        .cornerRadius(10)
+                                        .foregroundColor(Theme.Colors.textPrimary)
+                                }
+
+                                VStack(spacing: 8) {
+                                    Text("Vencedor da aposta")
+                                        .font(.subheadline)
+                                        .foregroundColor(Theme.Colors.textSecondary)
+
+                                    HStack(spacing: 10) {
+                                        Button {
+                                            viewModel.selectWinner(userId: viewModel.bet.athleteAUserId)
+                                        } label: {
+                                            Text(winnerButtonTitle(for: viewModel.bet.athleteAUserId))
+                                                .font(.subheadline.weight(.semibold))
+                                                .foregroundColor(Theme.Colors.textPrimary)
+                                                .frame(maxWidth: .infinity)
+                                                .padding(.vertical, 10)
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 10)
+                                                        .fill(
+                                                            isWinnerSelected(viewModel.bet.athleteAUserId)
+                                                            ? Color.white.opacity(0.20)
+                                                            : Color.black.opacity(0.18)
+                                                        )
+                                                )
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 10)
+                                                        .stroke(
+                                                            isWinnerSelected(viewModel.bet.athleteAUserId)
+                                                            ? Theme.Colors.textPrimary
+                                                            : Theme.Colors.border.opacity(0.7),
+                                                            lineWidth: 1
+                                                        )
+                                                )
+                                        }
+                                        .disabled(viewModel.isWorking)
+
+                                        Button {
+                                            viewModel.selectWinner(userId: viewModel.bet.athleteBUserId)
+                                        } label: {
+                                            Text(winnerButtonTitle(for: viewModel.bet.athleteBUserId))
+                                                .font(.subheadline.weight(.semibold))
+                                                .foregroundColor(Theme.Colors.textPrimary)
+                                                .frame(maxWidth: .infinity)
+                                                .padding(.vertical, 10)
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 10)
+                                                        .fill(
+                                                            isWinnerSelected(viewModel.bet.athleteBUserId)
+                                                            ? Color.white.opacity(0.20)
+                                                            : Color.black.opacity(0.18)
+                                                        )
+                                                )
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 10)
+                                                        .stroke(
+                                                            isWinnerSelected(viewModel.bet.athleteBUserId)
+                                                            ? Theme.Colors.textPrimary
+                                                            : Theme.Colors.border.opacity(0.7),
+                                                            lineWidth: 1
+                                                        )
+                                                )
+                                        }
+                                        .disabled(viewModel.isWorking)
+                                    }
+                                }
+
+                                HStack {
+                                    Text("Selecionado:")
+                                        .font(.footnote)
+                                        .foregroundColor(Theme.Colors.textSecondary)
+
+                                    Text(selectedWinnerName)
+                                        .font(.footnote.weight(.semibold))
+                                        .foregroundColor(Theme.Colors.textPrimary)
+
+                                    Spacer()
+                                }
+
+                                PrimaryButton(
+                                    title: viewModel.isWorking ? "Salvando..." : "Salvar resultado",
+                                    isDisabled: viewModel.isWorking || !viewModel.canSaveBetResult,
+                                    widthStyle: .card
+                                ) {
+                                    viewModel.saveBetResult()
+                                }
+                            }
+                        }
+                    }
+
+                    GlassCard {
+                        VStack(alignment: .leading, spacing: 10) {
                             Text("Andamento do Resultado")
                                 .font(.headline)
                                 .foregroundColor(Theme.Colors.textPrimary)
@@ -233,7 +439,7 @@ struct BetDetailView: View {
 
                         GlassCard {
                             VStack(spacing: 12) {
-                                Text("Resultado")
+                                Text("Confirmação")
                                     .font(.headline)
                                     .foregroundColor(Theme.Colors.textPrimary)
 

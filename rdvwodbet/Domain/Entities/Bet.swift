@@ -16,6 +16,8 @@ struct Bet: Identifiable, Equatable {
     let athleteBConfirmed: Bool
     let confirmedWinnerUserId: String?
     let votesByUserId: [String: String]
+    let athleteAResult: String?
+    let athleteBResult: String?
 
     var totalVotes: Int {
         votesByUserId.count
@@ -34,5 +36,36 @@ struct Bet: Identifiable, Equatable {
 
     func voteOfUser(_ userId: String) -> String? {
         votesByUserId[userId]
+    }
+
+    func updating(
+        status: BetStatus? = nil,
+        proposedWinnerUserId: String?? = nil,
+        athleteAConfirmed: Bool? = nil,
+        athleteBConfirmed: Bool? = nil,
+        confirmedWinnerUserId: String?? = nil,
+        votesByUserId: [String: String]? = nil,
+        athleteAResult: String?? = nil,
+        athleteBResult: String?? = nil
+    ) -> Bet {
+        Bet(
+            id: id,
+            createdAt: createdAt,
+            createdByUserId: createdByUserId,
+            athleteAUserId: athleteAUserId,
+            athleteBUserId: athleteBUserId,
+            wodTitle: wodTitle,
+            prizeType: prizeType,
+            prizeOtherDescription: prizeOtherDescription,
+            status: status ?? self.status,
+            expiresAt: expiresAt,
+            proposedWinnerUserId: proposedWinnerUserId ?? self.proposedWinnerUserId,
+            athleteAConfirmed: athleteAConfirmed ?? self.athleteAConfirmed,
+            athleteBConfirmed: athleteBConfirmed ?? self.athleteBConfirmed,
+            confirmedWinnerUserId: confirmedWinnerUserId ?? self.confirmedWinnerUserId,
+            votesByUserId: votesByUserId ?? self.votesByUserId,
+            athleteAResult: athleteAResult ?? self.athleteAResult,
+            athleteBResult: athleteBResult ?? self.athleteBResult
+        )
     }
 }
