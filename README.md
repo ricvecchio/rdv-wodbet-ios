@@ -53,7 +53,8 @@ No **RDV WODBet**:
 - Firebase Firestore
 
 ### Gerenciamento de dependências
-- Swift Package Manager
+- Swift Package Manager (preferido)
+- Suporte a CocoaPods se preferir (não incluído no repositório)
 
 ---
 
@@ -61,18 +62,26 @@ No **RDV WODBet**:
 
 O projeto foi desenvolvido utilizando **Clean Architecture + MVVM**.
 
-A aplicação é dividida em três camadas principais:
+A aplicação é dividida em camadas, facilitando testes e evolução:
 
-- **Presentation**
-- **Domain**
-- **Data**
-
-Essa separação permite:
-
-- baixo acoplamento
-- maior testabilidade
-- facilidade de manutenção
-- evolução futura do projeto
+- `App/` — Entrypoint e configuração global
+  - `RDVWODBetApp.swift` — App principal; chama o configurador do Firebase.
+  - `AppDIContainer.swift` — Contêiner simples de dependências (repositórios, use cases, viewmodels).
+  - `AppEnvironment.swift` — Variáveis de ambiente / flags centralizadas.
+  - `FirebaseConfigurator.swift` — Inicialização do Firebase (`FirebaseApp.configure()`).
+- `Data/` — Implementações de acesso a dados
+  - `Firebase/` — Data sources (ex.: `FirebaseAuthDataSource.swift`, `FirestoreUserDataSource.swift`, `FirestoreBetDataSource.swift`).
+  - `Repositories/` — Implementações de repositórios que adaptam os data sources para os protocolos de domínio.
+  - `DTOs/`, `Mappers/` — DTOs e conversores para domínio/Firestore.
+- `Domain/` — Entidades, protocolos e use cases
+  - `Entities/` — `AppUser`, `Bet`, etc.
+  - `Protocols/` — `AuthRepository`, `UserRepository`, `BetRepository`.
+  - `UseCases/` — Casos de uso (ex.: `CreateBetUseCase.swift`, `ObserveBetsUseCase.swift`).
+- `Presentation/` — Views e ViewModels (SwiftUI)
+  - `Auth/` — `AuthView.swift`, `AuthViewModel.swift`.
+  - `Feed/`, `CreateBet/`, `BetDetail/`, `Root/` — telas e lógica UI.
+- `Shared/` — Componentes, tema, utilitários (ex.: `Theme/`, `UIComponents/`, `Utils/`).
+- `Resources/` — Assets e imagens (`Assets.xcassets`).
 
 ### Fluxo arquitetural
 
@@ -94,57 +103,18 @@ Firebase
 
 ## Design Patterns Utilizados
 
-O projeto utiliza padrões clássicos de desenvolvimento para garantir organização, testabilidade e evolução futura.
+- MVVM
+- Repository Pattern
+- Use Case Pattern
+- Dependency Injection (injeção manual via `AppDIContainer`)
 
-### MVVM
-Separação entre interface e lógica de apresentação.
-
-### Repository Pattern
-Abstrai o acesso aos dados.
-
-**Exemplo**
-- `BetRepository`
-- `FirestoreBetRepository`
-
-Isso permite trocar a implementação do Firebase por outra fonte no futuro sem alterar as regras de negócio.
-
-### Use Case Pattern
-Cada regra de negócio fica isolada em um caso de uso específico.
-
-**Exemplos**
-- `ObserveBetsUseCase`
-- `CreateBetUseCase`
-- `ProposeWinnerUseCase`
-- `ConfirmWinnerUseCase`
-- `RejectWinnerUseCase`
-- `CancelBetUseCase`
-- `VoteOnBetUseCase`
-
-### Dependency Injection
-O projeto utiliza **injeção de dependência manual** por meio do `AppDIContainer`.
-
-O container centraliza a criação de:
-
-- DataSources
-- Repositories
-- UseCases
-
-**Exemplo**
-```swift
-lazy var createBetUseCase = CreateBetUseCase(betRepository: betRepository)
-```
-
-Benefícios:
-
-- baixo acoplamento
-- fácil substituição de dependências
-- melhor testabilidade
+O projeto usa boas práticas para manter baixo acoplamento e alta testabilidade.
 
 ---
 
 ## Estrutura de Navegação
 
-A navegação do aplicativo é centralizada no **RootView**.
+A navegação do aplicativo é centralizada no `RootView`.
 
 ### Fluxo de autenticação
 - Usuário deslogado → tela de login
@@ -169,9 +139,9 @@ Detalhe da aposta
 ## Autenticação
 
 - Autenticação via **Firebase Authentication**
-- Estrutura preparada para **Sign in with Apple**
+- Estrutura preparada para **Sign in with Apple** (ainda não implementado por completo)
 - Durante o desenvolvimento foi utilizado **login anônimo**
-- Cada usuário possui um **apelido único** dentro do box
+- Cada usuário possui um **displayName** (apelido) único dentro do box
 
 ### Campos do usuário
 - `uid`
@@ -214,28 +184,19 @@ Qualquer usuário autenticado pode criar uma aposta.
 - Gatorade
 - Cerveja
 - Shake
-- Outro
-
-Se o prêmio for **Outro**, uma descrição é obrigatória.
+- Outro (com descrição exigida)
 
 ---
 
 ## Regras de Negócio
 
-As regras estão centralizadas principalmente em `Validators.swift` e nos `UseCases`.
+As regras estão centralizadas principalmente em `Shared/Utils/Validators.swift` e nos `UseCases`.
 
 ### Validações implementadas
-- **Atletas diferentes**  
-  Atleta A ≠ Atleta B
-
-- **WOD obrigatório**  
-  O WOD não pode ser vazio
-
-- **Prêmio "Outro"**  
-  Se selecionado, a descrição é obrigatória
-
-- **Apelido do usuário**  
-  Deve ter pelo menos 2 caracteres
+- **Atletas diferentes** — Atleta A ≠ Atleta B
+- **WOD obrigatório** — O WOD não pode ser vazio
+- **Prêmio "Outro"** — Se selecionado, a descrição é obrigatória
+- **Apelido do usuário** — Deve ter pelo menos 2 caracteres
 
 ---
 
@@ -245,11 +206,9 @@ O fluxo de confirmação segue estas etapas:
 
 1. Um vencedor é proposto  
 2. Ambos os atletas precisam confirmar  
-3. Se ambos confirmarem → a aposta é finalizada  
+3. Se ambos confirmarem → a aposta é finalizada
 
-Caso haja discordância:
-
-- status = `disputed`
+Caso haja discordância: status = `disputed`.
 
 ---
 
@@ -264,233 +223,83 @@ O projeto inclui testes unitários focados principalmente na camada de domínio.
 - `ValidatorsCreateBetTests.swift`
 - `ValidatorsDisplayNameTests.swift`
 
-### Exemplos de cenários testados
-- falha quando os atletas são iguais
-- falha quando o WOD está vazio
-- falha quando o prêmio **Outro** não possui descrição
-- falha quando o apelido tem menos de 2 caracteres
-- criação de aposta com status inicial `open`
+### Executar testes
+- No Xcode: **Product → Test** (⌘U)
+- Via linha de comando (xcodebuild):
 
-Esses testes ajudam a garantir:
-
-- integridade das regras de negócio
-- previsibilidade do comportamento
-- facilidade de manutenção
-
----
-
-## Estrutura Geral do Projeto
-
-```text
-rdvwodbet/
-├─ App/
-│  ├─ RDVWODBetApp.swift
-│  ├─ AppDIContainer.swift
-│  ├─ AppEnvironment.swift
-│  └─ FirebaseConfigurator.swift
-├─ Presentation/
-│  ├─ Auth/
-│  │  ├─ AuthView.swift
-│  │  ├─ AuthViewModel.swift
-│  │  ├─ DisplayNameOnboardingView.swift
-│  │  └─ DisplayNameOnboardingViewModel.swift
-│  ├─ Feed/
-│  │  ├─ FeedView.swift
-│  │  ├─ FeedViewModel.swift
-│  │  └─ BetCardView.swift
-│  ├─ CreateBet/
-│  │  ├─ CreateBetView.swift
-│  │  └─ CreateBetViewModel.swift
-│  ├─ BetDetail/
-│  │  ├─ BetDetailView.swift
-│  │  └─ BetDetailViewModel.swift
-│  └─ Root/
-│     └─ RootView.swift
-├─ Domain/
-│  ├─ Entities/
-│  │  ├─ AppUser.swift
-│  │  ├─ Bet.swift
-│  │  ├─ PrizeType.swift
-│  │  └─ BetStatus.swift
-│  ├─ Protocols/
-│  │  ├─ AuthRepository.swift
-│  │  ├─ UserRepository.swift
-│  │  └─ BetRepository.swift
-│  └─ UseCases/
-│     ├─ ObserveBetsUseCase.swift
-│     ├─ CreateBetUseCase.swift
-│     ├─ ProposeWinnerUseCase.swift
-│     ├─ ConfirmWinnerUseCase.swift
-│     ├─ RejectWinnerUseCase.swift
-│     ├─ CancelBetUseCase.swift
-│     ├─ VoteOnBetUseCase.swift
-│     └─ ObserveAuthStateUseCase.swift
-├─ Data/
-│  ├─ DTOs/
-│  │  ├─ AppUserDTO.swift
-│  │  └─ BetDTO.swift
-│  ├─ Mappers/
-│  │  ├─ AppUserMapper.swift
-│  │  └─ BetMapper.swift
-│  ├─ Repositories/
-│  │  ├─ FirebaseAuthRepository.swift
-│  │  ├─ FirestoreUserRepository.swift
-│  │  └─ FirestoreBetRepository.swift
-│  └─ Firebase/
-│     ├─ FirebaseAuthDataSource.swift
-│     ├─ FirestoreUserDataSource.swift
-│     └─ FirestoreBetDataSource.swift
-├─ Shared/
-│  ├─ UIComponents/
-│  │  ├─ PrimaryButton.swift
-│  │  └─ LoadingView.swift
-│  ├─ Utils/
-│  │  ├─ AppError.swift
-│  │  ├─ Logger.swift
-│  │  └─ Validators.swift
-│  └─ Extensions/
-│     └─ Date+Format.swift
-
-rdvwodbetTests/
-├─ Support/
-│  └─ BetRepositorySpy.swift
-├─ UseCases/
-│  ├─ CancelBetUseCaseTests.swift
-│  ├─ ConfirmWinnerUseCaseTests.swift
-│  └─ CreateBetUseCaseTests.swift
-└─ Validators/
-   ├─ ValidatorsCreateBetTests.swift
-   └─ ValidatorsDisplayNameTests.swift
+```bash
+xcodebuild test -scheme <SchemeName> -destination 'platform=iOS Simulator,name=iPhone 14'
 ```
 
----
-
-## Atendimento aos Requisitos Acadêmicos
-
-### 1. Clean Code
-O projeto foi organizado com foco em legibilidade e manutenção:
-
-- separação por camadas
-- responsabilidades bem definidas
-- nomenclatura clara de arquivos e classes
-- regras de negócio fora da interface
-- validações centralizadas
-
-### 2. Arquitetura de Software
-Foi adotada uma arquitetura baseada em:
-
-- **Clean Architecture**
-- **MVVM**
-
-A interface fica desacoplada das regras de negócio e do acesso aos dados.
-
-### 3. Injeção de Dependência
-A injeção de dependência é feita manualmente no `AppDIContainer`, responsável por instanciar e conectar:
-
-- DataSources
-- Repositories
-- UseCases
-- ViewModels
-
-### 4. Testes Unitários
-O projeto possui **pelo menos 5 testes unitários**, cobrindo principalmente regras de domínio e validações.
-
-### 5. Design Patterns
-Padrões aplicados:
-
-- MVVM
-- Repository
-- Use Case
-- Dependency Injection
-
-### 6. Interface com pelo menos 3 telas funcionais
-O aplicativo possui, no mínimo, as seguintes telas funcionais:
-
-- Login
-- Onboarding
-- Feed de apostas
-- Criar aposta
-- Detalhe da aposta
+Substitua `<SchemeName>` pelo esquema do seu projeto (verificar no Xcode).
 
 ---
 
-## Roteiro Sugerido para Apresentação em Vídeo (até 15 minutos)
+## Dependências e como restaurar
 
-### 1. Introdução do projeto (1–2 min)
-Explique o problema resolvido pelo app e o contexto do CrossFit.
+O repositório não inclui `Podfile` nem `Package.swift` na raiz. As dependências do Firebase são esperadas via **Swift Package Manager** configuradas dentro do Xcode.
 
-### 2. Demonstração funcional (3–4 min)
-Mostre:
-- login
-- onboarding
-- feed
-- criação de aposta
-- detalhe da aposta
+Passos sugeridos (SwiftPM):
+1. Abra o projeto no Xcode.
+2. Menu: File → Add Packages...
+3. Cole a URL: `https://github.com/firebase/firebase-ios-sdk`
+4. Selecione os pacotes necessários: `FirebaseCore`, `FirebaseAuth`, `FirebaseFirestore`.
 
-### 3. Arquitetura e organização do código (3 min)
-Mostre as camadas:
-- Presentation
-- Domain
-- Data
-
-Explique rapidamente o fluxo:
-View → ViewModel → UseCase → Repository → DataSource
-
-### 4. Dependency Injection e padrões (2 min)
-Abra `AppDIContainer.swift` e explique como as dependências são montadas.
-
-### 5. Regras de negócio (2 min)
-Mostre `Validators.swift` e `CreateBetUseCase.swift`.
-
-### 6. Testes unitários (2 min)
-Mostre a pasta `rdvwodbetTests` e comente os cenários cobertos.
-
-### 7. Encerramento (1 min)
-Conclua reforçando que o projeto atende aos requisitos acadêmicos e está preparado para evolução futura.
+Se preferir CocoaPods:
+1. Crie um `Podfile` com as dependências desejadas (`Firebase/Auth`, `Firebase/Firestore`, etc.).
+2. Rode `pod install` e abra o `.xcworkspace`.
 
 ---
 
-## Build / Execução
+## Configuração do Firebase
 
-1. Abra o projeto no **Xcode 15+**
-2. Adicione o arquivo `GoogleService-Info.plist` ao target do app
-3. Instale o Firebase via **Swift Package Manager**
-4. Execute em simulador ou dispositivo **iOS 16+**
+1. Crie um projeto no Firebase Console (https://console.firebase.google.com).
+2. Adicione um app iOS ao projeto informando o **Bundle ID** do seu target (verificar em Xcode > Target > General > Bundle Identifier).
+3. Baixe o `GoogleService-Info.plist` gerado pelo Firebase.
+4. Substitua/adicione o arquivo `GoogleService-Info.plist` em `App/` (ex.: `rdvwodbet/App/GoogleService-Info.plist`). Ao arrastar para o Xcode, selecione “Copy items if needed” e verifique se o arquivo está adicionado ao target do app.
 
----
+Observações de segurança:
+- Não é recomendado commitar `GoogleService-Info.plist` em repositórios públicos. Considere adicionar ao `.gitignore` e distribuir o arquivo via canal seguro.
 
-## Executar Testes
+Serviços a habilitar no Firebase Console:
+- Authentication → habilitar **Anonymous** para desenvolvimento e outros provedores conforme necessário (Apple Sign In).
+- Firestore → criar base de dados (modo de teste para desenvolvimento; ajustar regras para produção).
 
-No Xcode:
-
-- **Product → Test**
-- ou **⌘ + U**
-
----
-
-## Limitações da Fase Atual
-
-O projeto representa a **Fase 1** do aplicativo.
-
-### Limitações atuais
-- Sign in with Apple ainda não implementado
-- não há ranking de atletas
-- não há histórico de apostas
-- não há notificações push
+O app já chama `FirebaseConfigurator.configure()` no `RDVWODBetApp` para inicialização.
 
 ---
 
-## Próximos Passos
+## Dicas de troubleshooting (comuns)
 
-Planejamento futuro:
+1. Crash em `FirebaseApp.configure()`
+   - Verifique se o `GoogleService-Info.plist` está presente no bundle e se o Bundle ID confere com o app registrado no Firebase.
+2. Erro: “insufficient permissions” ao acessar Firestore
+   - Ajuste as regras do Firestore para debug (modo de teste) e depois crie regras apropriadas para produção.
+3. Autenticação retornando nil
+   - Verifique se o provedor (Anonymous, Apple) está habilitado no Firebase e se o listener do auth está correto.
+4. Dependências não encontradas
+   - Adicione o SDK do Firebase via SwiftPM ou restaure pods se estiver usando CocoaPods.
 
-- Sign in with Apple
-- ranking de atletas
-- histórico de apostas
-- sistema de conquistas
-- notificações push
-- inventário de prêmios pendentes
-- estatísticas de performance
+---
+
+## Arquivos notáveis para configuração e desenvolvimento
+
+- `App/`:
+  - `RDVWODBetApp.swift` — Entrypoint do app
+  - `AppDIContainer.swift` — Montagem das dependências
+  - `AppEnvironment.swift` — Configurações por ambiente (dev/prod)
+  - `FirebaseConfigurator.swift` — Inicialização do Firebase
+  - `GoogleService-Info.plist` — configuração do Firebase (substituir pelo seu)
+- `Data/Firebase/`:
+  - `FirebaseAuthDataSource.swift`
+  - `FirestoreUserDataSource.swift`
+  - `FirestoreBetDataSource.swift`
+- `Data/Repositories/`:
+  - `FirebaseAuthRepository.swift`
+  - `FirestoreUserRepository.swift`
+  - `FirestoreBetRepository.swift`
+- `Presentation/Auth/AuthView.swift` — Tela de login usada para dev com `signInAnonymouslyForDev()`
+- `Shared/Utils/Validators.swift` — validações centrais do domínio
 
 ---
 
@@ -505,18 +314,20 @@ Este projeto foi desenvolvido como **trabalho acadêmico de pós-graduação**, 
 - Firebase Integration
 - SwiftUI moderno
 
-Além do contexto acadêmico, o projeto também serve como base para evolução em um **produto real para comunidades de CrossFit**.
-
 ---
 
 ## Autor
 
 **Ricardo Vecchio**
 
-Projeto acadêmico voltado para estudo de:
+---
 
-- Arquitetura iOS
-- SwiftUI
-- Firebase
-- Engenharia de Software
+## Assunções
 
+1. Dependências do Firebase são gerenciadas via Swift Package Manager dentro do Xcode (não foi encontrado `Podfile` nem `Package.swift`).
+2. O `GoogleService-Info.plist` presente no repositório pode ser um placeholder — substituir pelo seu arquivo do Firebase.
+3. O Bundle ID do target precisa bater com o app registrado no Firebase.
+4. O app usa autenticação anônima para desenvolvimento conforme `Presentation/Auth/AuthView.swift`.
+5. O usuário que vai compilar o projeto tem Xcode (15+) instalado.
+
+---
