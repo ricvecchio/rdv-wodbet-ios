@@ -36,7 +36,7 @@ struct AuthView: View {
                         .fixedSize(horizontal: false, vertical: true)
 
                     PrimaryButton(
-                        title: "Entrar (dev)",
+                        title: "Entrar",
                         isDisabled: false
                     ) {
                         // ✅ login real para não dar “insufficient permissions”
