@@ -14,10 +14,17 @@ final class AuthViewModel: ObservableObject {
 
     @Published private(set) var state: State = .loading
     @Published var errorMessage: String?
+    @Published var isLoading: Bool = false
+
+    // Forgot password
+    @Published var showForgotPassword: Bool = false
+    @Published var forgotPasswordEmail: String = ""
+    @Published var forgotPasswordMessage: String?
+    @Published var isSendingReset: Bool = false
 
     private let observeAuthStateUseCase: ObserveAuthStateUseCase
-    private let userRepository: UserRepository
-    private let authRepository: AuthRepository
+    let userRepository: UserRepository
+    let authRepository: AuthRepository
 
     private var cancellables = Set<AnyCancellable>()
     private var currentUID: String?
@@ -60,6 +67,7 @@ final class AuthViewModel: ObservableObject {
 
     private func loadUser(uid: String) {
         state = .loading
+        isLoading = false
 
         userRepository.fetchUser(uid: uid)
             .receive(on: DispatchQueue.main)
@@ -88,41 +96,70 @@ final class AuthViewModel: ObservableObject {
         }
     }
 
+    func signInWithEmail(email: String, password: String) {
+        guard !email.isEmpty, !password.isEmpty else {
+            errorMessage = "Preencha e-mail e senha."
+            return
+        }
+        errorMessage = nil
+        isLoading = true
+
+        authRepository.signIn(email: email, password: password)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                guard let self else { return }
+                self.isLoading = false
+                if case .failure(let err) = completion {
+                    self.errorMessage = err.localizedDescription
+                    self.state = .loggedOut
+                }
+            } receiveValue: { [weak self] uid in
+                guard let self else { return }
+                self.currentUID = uid
+                self.loadUser(uid: uid)
+            }
+            .store(in: &cancellables)
+    }
+
+    func sendPasswordReset() {
+        let email = forgotPasswordEmail.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !email.isEmpty else {
+            forgotPasswordMessage = "Digite seu e-mail."
+            return
+        }
+        forgotPasswordMessage = nil
+        isSendingReset = true
+
+        authRepository.sendPasswordReset(email: email)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                guard let self else { return }
+                self.isSendingReset = false
+                if case .failure(let err) = completion {
+                    self.forgotPasswordMessage = err.localizedDescription
+                } else {
+                    self.forgotPasswordMessage = "E-mail enviado! Verifique sua caixa de entrada."
+                }
+            } receiveValue: { _ in }
+            .store(in: &cancellables)
+    }
+
     // ✅ DEV LOGIN REAL (Firebase Auth - Anônimo)
     func signInAnonymouslyForDev() {
         errorMessage = nil
         state = .loading
 
-        Auth.auth().signInAnonymously { [weak self] result, error in
-            guard let self else { return }
-
-            if let error {
-                Task { @MainActor in
-                    self.errorMessage = "Falha ao autenticar: \(error.localizedDescription)"
-                    self.state = .loggedOut
-                }
-                return
-            }
-
-            guard let uid = result?.user.uid else {
-                Task { @MainActor in
-                    self.errorMessage = "Não foi possível obter UID."
-                    self.state = .loggedOut
-                }
-                return
-            }
-
-            Task { @MainActor in
-                self.currentUID = uid
-                self.loadUser(uid: uid)
+        Task {
+            do {
+                let result = try await Auth.auth().signInAnonymously()
+                let uid = result.user.uid
+                currentUID = uid
+                loadUser(uid: uid)
+            } catch {
+                errorMessage = "Falha ao autenticar: \(error.localizedDescription)"
+                state = .loggedOut
             }
         }
-    }
-
-    // ⚠️ Se ainda quiser manter o mock, deixe aqui (mas NÃO use para Firestore)
-    func mockLoginForDev(uid: String = "dev-user-123") {
-        self.currentUID = uid
-        self.state = .needsDisplayName(uid: uid)
     }
 }
 

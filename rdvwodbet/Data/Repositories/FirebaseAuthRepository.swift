@@ -12,8 +12,19 @@ final class FirebaseAuthRepository: AuthRepository {
         dataSource.observeAuthState()
     }
 
+    func signIn(email: String, password: String) -> AnyPublisher<String, AppError> {
+        dataSource.signIn(email: email, password: password)
+    }
+
+    func signUp(email: String, password: String) -> AnyPublisher<String, AppError> {
+        dataSource.signUp(email: email, password: password)
+    }
+
+    func sendPasswordReset(email: String) -> AnyPublisher<Void, AppError> {
+        dataSource.sendPasswordReset(email: email)
+    }
+
     func signInWithApple(idToken: String, nonce: String) -> AnyPublisher<String, AppError> {
-        // Implementaremos no próximo passo (Sign in with Apple + Firebase)
         return Fail(error: .invalidInput("Sign in with Apple ainda não implementado."))
             .eraseToAnyPublisher()
     }
