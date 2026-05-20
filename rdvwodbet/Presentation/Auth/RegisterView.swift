@@ -86,7 +86,7 @@ struct RegisterView: View {
                     Button {
                         dismiss()
                     } label: {
-                        Text("Ja tenho conta \u2014 ")
+                        Text("Já tenho conta — ")
                             .foregroundColor(Theme.Colors.textSecondary)
                         + Text("Voltar ao login")
                             .bold()
