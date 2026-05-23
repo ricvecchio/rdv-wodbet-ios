@@ -5,7 +5,10 @@ import Combine
 // MARK: - Firebase Auth Error → mensagem amigável em pt-BR
 
 private func firebaseAuthErrorMessage(_ error: Error) -> String {
-    let code = AuthErrorCode(_nsError: error as NSError).code
+    let nsError = error as NSError
+    guard let code = AuthErrorCode(rawValue: nsError.code) else {
+        return "Ocorreu um erro inesperado. Tente novamente."
+    }
     switch code {
     case .invalidEmail:
         return "O e-mail informado é inválido."
