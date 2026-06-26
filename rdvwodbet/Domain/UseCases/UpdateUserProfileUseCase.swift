@@ -12,8 +12,20 @@ final class UpdateUserProfileUseCase {
         self.repository = repository
     }
 
-    func execute(userId: String, name: String, description: String? = nil) -> AnyPublisher<AppUser, AppError> {
-        repository.updateUserProfile(userId: userId, name: name, description: description)
+    func execute(
+        userId: String,
+        name: String,
+        description: String? = nil,
+        phone: String? = nil,
+        photoUrl: String? = nil
+    ) -> AnyPublisher<AppUser, AppError> {
+        repository.updateUserProfile(
+            userId: userId,
+            name: name,
+            description: description,
+            phone: phone,
+            photoUrl: photoUrl
+        )
     }
 }
 

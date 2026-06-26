@@ -8,7 +8,8 @@ enum BackendUserMapper {
         return AppUser(
             id: dto.id,
             displayName: dto.name,
-            photoURL: nil,
+            photoURL: dto.photoUrl,
+            description: dto.description,
             createdAt: createdAt,
             phone: dto.phone
         )

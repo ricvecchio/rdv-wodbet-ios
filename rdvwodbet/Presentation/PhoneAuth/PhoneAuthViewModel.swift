@@ -28,11 +28,9 @@ final class PhoneAuthViewModel: ObservableObject {
     private let sessionManager: SessionManager
     private var cancellables = Set<AnyCancellable>()
 
-    // MARK: - UUID do dispositivo (identifierForVendor, conforme requisito)
-
-    private var deviceUUID: String {
-        UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
-    }
+    // Mantem phone/uuid entre as etapas para nao solicitar novamente no confirm.
+    private var pendingPhone: String?
+    private var pendingUUID: String?
 
     // MARK: - Init
 
@@ -63,6 +61,17 @@ final class PhoneAuthViewModel: ObservableObject {
         errorMessage = nil
         isLoading = true
 
+        guard let deviceUUID = UIDevice.current.identifierForVendor?.uuidString,
+              !deviceUUID.isEmpty
+        else {
+            isLoading = false
+            errorMessage = "Nao foi possivel identificar este dispositivo. Tente novamente."
+            return
+        }
+
+        pendingPhone = trimmedPhone
+        pendingUUID = deviceUUID
+
         loginWithPhoneUseCase
             .execute(phone: trimmedPhone, uuid: deviceUUID)
             .receive(on: DispatchQueue.main)
@@ -75,9 +84,9 @@ final class PhoneAuthViewModel: ObservableObject {
             } receiveValue: { [weak self] result in
                 guard let self else { return }
                 switch result {
-                case .loggedIn(let user):
+                case .loggedIn(let authSession):
                     // HTTP 200 — usuário e uuid já conhecidos, login direto
-                    self.sessionManager.save(user: user)
+                    self.sessionManager.save(authSession: authSession)
                 case .codeRequired:
                     // HTTP 202 — backend enviou código de confirmação
                     self.step = .enterCode
@@ -97,10 +106,21 @@ final class PhoneAuthViewModel: ObservableObject {
         errorMessage = nil
         isLoading = true
 
+        guard let cachedPhone = pendingPhone,
+              let cachedUUID = pendingUUID,
+              !cachedPhone.isEmpty,
+              !cachedUUID.isEmpty
+        else {
+            isLoading = false
+            errorMessage = "Refaca o login para solicitar um novo codigo."
+            step = .enterPhone
+            return
+        }
+
         confirmPhoneLoginUseCase
             .execute(
-                phone: phone.trimmingCharacters(in: .whitespacesAndNewlines),
-                uuid: deviceUUID,
+                phone: cachedPhone,
+                uuid: cachedUUID,
                 code: trimmedCode
             )
             .receive(on: DispatchQueue.main)
@@ -110,10 +130,10 @@ final class PhoneAuthViewModel: ObservableObject {
                 if case .failure(let error) = completion {
                     self.errorMessage = Self.mapConfirmError(error)
                 }
-            } receiveValue: { [weak self] user in
+            } receiveValue: { [weak self] authSession in
                 guard let self else { return }
                 // HTTP 200 — usuário criado/atualizado, salva sessão
-                self.sessionManager.save(user: user)
+                self.sessionManager.save(authSession: authSession)
             }
             .store(in: &cancellables)
     }
@@ -121,6 +141,8 @@ final class PhoneAuthViewModel: ObservableObject {
     /// Volta à etapa de inserção de telefone.
     func goBackToPhone() {
         code = ""
+        pendingPhone = nil
+        pendingUUID = nil
         errorMessage = nil
         step = .enterPhone
     }
@@ -130,9 +152,13 @@ final class PhoneAuthViewModel: ObservableObject {
     private static func mapConfirmError(_ error: AppError) -> String {
         switch error {
         case .dataNotFound:
-            return "Nenhum código de confirmação foi encontrado para este telefone."
-        case .invalidInput:
-            return "Código inválido. Verifique e tente novamente."
+            return "Codigo invalido ou expirado."
+        case .invalidInput(let message):
+            return message
+        case .permissionDenied:
+            return "Credenciais invalidas."
+        case .network(let message):
+            return message
         default:
             return error.errorDescription ?? "Erro ao confirmar o código."
         }

@@ -266,6 +266,149 @@ Exibido quando o usuário logado ainda não tem `displayName` preenchido.
 - Campo de apelido (mín. 2 caracteres, validado por `Validators.validateDisplayName`)
 - Botão **Continuar** — chama `PUT /users/{id}` via `UpdateUserProfileUseCase`, salva na sessão e redireciona ao feed
 
+### Autenticacao por telefone (RDV WODBet Auth Server)
+
+Esta versao utiliza temporariamente o backend **RDV WODBet Auth Server** para autenticacao por telefone, mantendo toda a infraestrutura Firebase no projeto para retorno futuro.
+
+#### Arquitetura utilizada
+
+```text
+PhoneAuthView
+-> PhoneAuthViewModel
+-> LoginWithPhoneUseCase / ConfirmPhoneLoginUseCase / UpdateUserProfileUseCase
+-> PhoneAuthRepositoryProtocol
+-> PhoneAuthRepository
+-> PhoneAuthRemoteDataSource
+-> Auth Server REST API (/users/login, /users/confirm, /users/{id})
+-> SessionManager (UserDefaults)
+```
+
+#### UUID do dispositivo (`identifierForVendor`)
+
+O UUID enviado ao backend e o valor retornado diretamente pelo sistema:
+
+```swift
+UIDevice.current.identifierForVendor?.uuidString
+```
+
+Nao ha geracao manual de UUID no fluxo ativo.
+
+#### Fluxo completo de login
+
+1. Usuario informa apenas `phone`.
+2. App coleta `uuid` do dispositivo.
+3. App envia `POST /users/login`.
+4. Se HTTP `200`: salva JWT + usuario e navega para Home.
+5. Se HTTP `202`: navega automaticamente para confirmacao e mantem `phone` + `uuid` em memoria.
+
+Request:
+
+```json
+{
+  "phone": "+5511999999999",
+  "uuid": "A1B2C3D4-E5F6-4711-8A9B-CCDDEEFF0011"
+}
+```
+
+Response HTTP 200 (exemplo):
+
+```json
+{
+  "token": "<jwt>",
+  "user": {
+    "id": "123",
+    "name": "Ricardo",
+    "description": "Atleta do box",
+    "phone": "+5511999999999",
+    "photoUrl": "https://..."
+  }
+}
+```
+
+Response HTTP 202: sem sessao autenticada; app exibe etapa de codigo.
+
+#### Fluxo de confirmacao
+
+1. Usuario informa `code`.
+2. App reutiliza `phone` + `uuid` mantidos em memoria (nao solicita novamente).
+3. App envia `POST /users/confirm`.
+4. Se HTTP `200`: salva JWT + usuario + id e navega para Home.
+5. Se HTTP `404`: exibe mensagem amigavel **"Codigo invalido ou expirado."**.
+
+Request:
+
+```json
+{
+  "phone": "+5511999999999",
+  "uuid": "A1B2C3D4-E5F6-4711-8A9B-CCDDEEFF0011",
+  "code": "123456"
+}
+```
+
+Response HTTP 200 (exemplo):
+
+```json
+{
+  "token": "<jwt>",
+  "user": {
+    "id": "123",
+    "name": "Ricardo",
+    "description": "Atleta do box",
+    "phone": "+5511999999999",
+    "photoUrl": "https://..."
+  }
+}
+```
+
+#### Atualizacao de perfil
+
+Endpoint utilizado: `PUT /users/{id}`
+
+Campos suportados:
+- `name`
+- `description`
+- `phone`
+- `photoUrl`
+
+Request:
+
+```json
+{
+  "name": "Ricardo Vecchio",
+  "description": "Coach",
+  "phone": "+5511999999999",
+  "photoUrl": "https://..."
+}
+```
+
+#### Codigos HTTP esperados e mensagens
+
+| HTTP | Mensagem no app |
+|---|---|
+| 400 | Dados invalidos. |
+| 401 | Credenciais invalidas. |
+| 404 | Codigo invalido ou expirado. |
+| 500 | Erro interno do servidor. |
+
+#### Persistencia da sessao
+
+Apos autenticacao (login 200 ou confirmacao 200), o app persiste localmente via `SessionManager`:
+
+- JWT
+- id do usuario
+- telefone
+- uuid
+- nome
+- descricao
+
+Na abertura do app, se existir JWT nao expirado, o login nao e exibido e o usuario segue para o fluxo autenticado.
+
+#### Integracao com Firebase (preservada)
+
+- Nenhuma classe Firebase foi removida.
+- O fluxo Firebase permanece no projeto para reutilizacao futura.
+- A ativacao atual do Auth Server foi feita por isolamento em DI/navegacao e por implementacao alternativa da camada de autenticacao.
+
 ---
 
 ## Autenticação Firebase (preservada para retorno futuro)
