@@ -1,0 +1,107 @@
+import Foundation
+import Combine
+
+// ⚠️ ENTREGA ACADÊMICA: DataSource HTTP para apostas no backend Java.
+// Substitui Firestore no feed, criação, votação e finalização das apostas.
+final class BackendBetRemoteDataSource {
+    private let client: BackendAPIClient
+
+    init(baseURL: URL, authTokenProvider: @escaping () -> String? = { nil }, session: URLSession = .shared) {
+        self.client = BackendAPIClient(baseURL: baseURL, session: session, authTokenProvider: authTokenProvider)
+    }
+
+    func fetchBets() -> AnyPublisher<[BetBackendDTO], AppError> {
+        client.request(path: "bets", method: "GET")
+            .tryMap { data, response -> [BetBackendDTO] in
+                guard response.statusCode == 200 else {
+                    throw BackendAPIClient.error(for: response.statusCode)
+                }
+                return try self.client.decodeCollection(BetBackendDTO.self, from: data)
+            }
+            .mapError { $0 as? AppError ?? AppError.network("Não foi possível carregar as apostas.") }
+            .eraseToAnyPublisher()
+    }
+
+    func createBet(_ bet: Bet) -> AnyPublisher<Void, AppError> {
+        let body = BackendBetMapper.toCreateRequest(bet)
+        return performVoid(path: "bets", method: "POST", body: body)
+    }
+
+    func voteOnBet(betId: String, voterUserId: String, votedAthleteUserId: String) -> AnyPublisher<Void, AppError> {
+        performVoid(
+            path: "bets/\(betId)/vote",
+            method: "PUT",
+            body: BackendVoteOnBetRequestDTO(voterUserId: voterUserId, votedAthleteUserId: votedAthleteUserId)
+        )
+    }
+
+    func proposeWinner(betId: String, requesterUserId: String, proposedWinnerUserId: String) -> AnyPublisher<Void, AppError> {
+        performVoid(
+            path: "bets/\(betId)/winner",
+            method: "PUT",
+            body: BackendProposeWinnerRequestDTO(
+                requesterUserId: requesterUserId,
+                proposedWinnerUserId: proposedWinnerUserId
+            )
+        )
+    }
+
+    func confirmWinner(betId: String, confirmerUserId: String) -> AnyPublisher<Void, AppError> {
+        performVoid(
+            path: "bets/\(betId)/confirm",
+            method: "PUT",
+            body: BackendConfirmWinnerRequestDTO(confirmerUserId: confirmerUserId)
+        )
+    }
+
+    func rejectWinner(betId: String, rejectorUserId: String) -> AnyPublisher<Void, AppError> {
+        performVoid(
+            path: "bets/\(betId)/reject",
+            method: "PUT",
+            body: BackendRejectWinnerRequestDTO(rejectorUserId: rejectorUserId)
+        )
+    }
+
+    func cancelBet(betId: String, requesterUserId: String) -> AnyPublisher<Void, AppError> {
+        performVoid(
+            path: "bets/\(betId)/cancel",
+            method: "PUT",
+            body: BackendCancelBetRequestDTO(requesterUserId: requesterUserId)
+        )
+    }
+
+    func updateBetResult(
+        betId: String,
+        requesterUserId: String,
+        athleteAResult: String,
+        athleteBResult: String,
+        winnerUserId: String
+    ) -> AnyPublisher<Void, AppError> {
+        performVoid(
+            path: "bets/\(betId)/result",
+            method: "PUT",
+            body: BackendUpdateBetResultRequestDTO(
+                requesterUserId: requesterUserId,
+                athleteAResult: athleteAResult,
+                athleteBResult: athleteBResult,
+                winnerUserId: winnerUserId
+            )
+        )
+    }
+
+    private func performVoid<T: Encodable>(path: String, method: String, body: T) -> AnyPublisher<Void, AppError> {
+        guard let requestBody = try? JSONEncoder().encode(body) else {
+            return Fail(error: .unknown).eraseToAnyPublisher()
+        }
+        return client.request(path: path, method: method, body: requestBody)
+            .tryMap { _, response in
+                guard (200...299).contains(response.statusCode) else {
+                    throw BackendAPIClient.error(for: response.statusCode)
+                }
+                return ()
+            }
+            .mapError { $0 as? AppError ?? AppError.network("A operação não pôde ser concluída.") }
+            .eraseToAnyPublisher()
+    }
+}
+
