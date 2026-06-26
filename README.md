@@ -268,7 +268,7 @@ Exibido quando o usuário logado ainda não tem `displayName` preenchido.
 
 ### Autenticacao por telefone (RDV WODBet Auth Server)
 
-Esta versao utiliza temporariamente o backend **RDV WODBet Auth Server** para autenticacao por telefone, mantendo toda a infraestrutura Firebase no projeto para retorno futuro.
+Esta versão utiliza temporariamente o backend **RDV WODBet Auth Server** para autenticacao por telefone, mantendo toda a infraestrutura Firebase no projeto para retorno futuro.
 
 #### Arquitetura utilizada
 
