@@ -67,7 +67,49 @@ final class BackendAPIClient {
             return resolved
         }
 
+        if let resolvedFromJSONObject = decodeCollectionFromJSONObject(type, from: data) {
+            return resolvedFromJSONObject
+        }
+
+        // Temporary backend debugging aid: print the response body that failed to decode.
+        print(String(data: data, encoding: .utf8) ?? "Sem body")
+
         throw AppError.network("Não foi possível interpretar a lista retornada pelo servidor.")
+    }
+
+    private func decodeCollectionFromJSONObject<T: Decodable>(_ type: T.Type, from data: Data) -> [T]? {
+        guard let jsonObject = try? JSONSerialization.jsonObject(with: data) else {
+            return nil
+        }
+        guard let dictionary = jsonObject as? [String: Any] else {
+            return nil
+        }
+
+        if let collection = decodeCollection(type, from: dictionary) {
+            return collection
+        }
+
+        for key in BackendCollectionEnvelope<T>.allCollectionKeys {
+            guard let nestedDictionary = dictionary[key] as? [String: Any] else { continue }
+            if let collection = decodeCollection(type, from: nestedDictionary) {
+                return collection
+            }
+        }
+
+        return nil
+    }
+
+    private func decodeCollection<T: Decodable>(_ type: T.Type, from dictionary: [String: Any]) -> [T]? {
+        for key in BackendCollectionEnvelope<T>.allCollectionKeys {
+            guard let rawArray = dictionary[key] as? [Any] else { continue }
+            guard JSONSerialization.isValidJSONObject(rawArray),
+                  let rawData = try? JSONSerialization.data(withJSONObject: rawArray),
+                  let decoded = try? JSONDecoder.backendDecoder.decode([T].self, from: rawData) else {
+                continue
+            }
+            return decoded
+        }
+        return nil
     }
 
     static func error(for statusCode: Int) -> AppError {
@@ -105,6 +147,10 @@ private struct BackendCollectionEnvelope<Element: Decodable>: Decodable {
 
     var resolvedItems: [Element]? {
         items ?? content ?? data ?? results
+    }
+
+    static var allCollectionKeys: [String] {
+        ["items", "content", "data", "results"]
     }
 }
 

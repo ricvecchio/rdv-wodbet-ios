@@ -2,28 +2,34 @@ import Foundation
 
 enum BackendBetMapper {
     static func toDomain(_ dto: BetBackendDTO) -> Bet {
-        let prize = PrizeType(rawValue: dto.prizeType) ?? .water
-        let baseStatus = BetStatus(rawValue: dto.status) ?? .open
-        let resolvedStatus = resolveStatus(baseStatus: baseStatus, expiresAt: parseDate(dto.expiresAt))
+        let normalizedPrize = normalizeEnumValue(dto.prizeType)
+        let normalizedStatus = normalizeEnumValue(dto.status)
+        let prize = PrizeType(rawValue: normalizedPrize) ?? .water
+        let baseStatus = BetStatus(rawValue: normalizedStatus) ?? .open
+        let expiresAt = parseDate(dto.expiresAt)
+        let resolvedStatus = resolveStatus(baseStatus: baseStatus, expiresAt: expiresAt)
+        let fallbackAthleteA = dto.athleteAUserId.nonEmptyOrNil ?? "athlete_a"
+        let fallbackAthleteB = dto.athleteBUserId.nonEmptyOrNil ?? "athlete_b"
+        let createdBy = dto.createdByUserId.nonEmptyOrNil ?? fallbackAthleteA
 
         return Bet(
-            id: dto.id,
+            id: dto.id.nonEmptyOrNil ?? UUID().uuidString,
             createdAt: parseDate(dto.createdAt),
-            createdByUserId: dto.createdByUserId,
-            athleteAUserId: dto.athleteAUserId,
-            athleteBUserId: dto.athleteBUserId,
-            wodTitle: dto.wodTitle,
+            createdByUserId: createdBy,
+            athleteAUserId: fallbackAthleteA,
+            athleteBUserId: fallbackAthleteB,
+            wodTitle: dto.wodTitle.nonEmptyOrNil ?? "Aposta",
             prizeType: prize,
-            prizeOtherDescription: dto.prizeOtherDescription,
+            prizeOtherDescription: dto.prizeOtherDescription?.nonEmptyOrNil,
             status: resolvedStatus,
-            expiresAt: parseDate(dto.expiresAt),
-            proposedWinnerUserId: dto.proposedWinnerUserId ?? dto.winnerUserId ?? dto.confirmedWinnerUserId,
+            expiresAt: expiresAt,
+            proposedWinnerUserId: dto.proposedWinnerUserId?.nonEmptyOrNil ?? dto.winnerUserId?.nonEmptyOrNil ?? dto.confirmedWinnerUserId?.nonEmptyOrNil,
             athleteAConfirmed: dto.athleteAConfirmed,
             athleteBConfirmed: dto.athleteBConfirmed,
-            confirmedWinnerUserId: dto.confirmedWinnerUserId ?? dto.winnerUserId,
-            votesByUserId: dto.votesByUserId,
-            athleteAResult: dto.athleteAResult,
-            athleteBResult: dto.athleteBResult
+            confirmedWinnerUserId: dto.confirmedWinnerUserId?.nonEmptyOrNil ?? dto.winnerUserId?.nonEmptyOrNil,
+            votesByUserId: sanitizeVotes(dto.votesByUserId),
+            athleteAResult: dto.athleteAResult?.nonEmptyOrNil,
+            athleteBResult: dto.athleteBResult?.nonEmptyOrNil
         )
     }
 
@@ -75,10 +81,37 @@ enum BackendBetMapper {
         return Date()
     }
 
+    private static func sanitizeVotes(_ rawVotes: [String: String]) -> [String: String] {
+        rawVotes.reduce(into: [:]) { partialResult, pair in
+            guard
+                let userId = pair.key.nonEmptyOrNil,
+                let votedUserId = pair.value.nonEmptyOrNil
+            else {
+                return
+            }
+            partialResult[userId] = votedUserId
+        }
+    }
+
+    private static func normalizeEnumValue(_ raw: String) -> String {
+        raw
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .replacingOccurrences(of: "-", with: "")
+            .replacingOccurrences(of: "_", with: "")
+    }
+
     private static func isoString(from date: Date) -> String {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter.string(from: date)
+    }
+}
+
+private extension String {
+    var nonEmptyOrNil: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }
 

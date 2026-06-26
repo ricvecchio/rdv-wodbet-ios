@@ -39,6 +39,7 @@ final class FeedViewModel: ObservableObject {
             } receiveValue: { [weak self] bets, users in
                 guard let self else { return }
 
+                self.errorMessage = nil
                 self.usersById = Dictionary(uniqueKeysWithValues: users.map { ($0.id, $0) })
                 self.bets = bets.sorted(by: { $0.createdAt > $1.createdAt })
             }

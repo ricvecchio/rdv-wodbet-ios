@@ -129,15 +129,20 @@ A aplicação é dividida em camadas, facilitando testes e evolução:
   - `FirebaseConfigurator.swift` — Inicialização do Firebase (`FirebaseApp.configure()`).
 - `Data/` — Implementações de acesso a dados
   - `Firebase/` — Data sources Firebase (`FirebaseAuthDataSource.swift`, `FirestoreUserDataSource.swift`, `FirestoreBetDataSource.swift`) — **preservados**.
-  - `Backend/` — ⚠️ *Novo (entrega acadêmica)* — `PhoneAuthRemoteDataSource.swift` — chamadas HTTP ao backend Java.
+  - `Backend/` — ⚠️ *Novo (entrega acadêmica)*:
+    - `PhoneAuthRemoteDataSource.swift` — autenticação por telefone (`/users/login`, `/users/confirm`, `/users/{id}`).
+    - `BackendUserRemoteDataSource.swift` — consumo de usuários (`/users`).
+    - `BackendParticipantRemoteDataSource.swift` — consumo de participantes (`/participants`).
+    - `BackendBetRemoteDataSource.swift` — consumo de apostas (`/bets` e ações de aposta).
+    - `BackendAPIClient.swift` — cliente HTTP compartilhado + decode tolerante de coleções (array/envelope).
   - `Session/` — ⚠️ *Novo (entrega acadêmica)* — `SessionManager.swift` — persistência de sessão local via `UserDefaults`.
-  - `Repositories/` — Implementações de repositórios; inclui `PhoneAuthRepository.swift` (novo) além dos Firebase existentes.
-  - `DTOs/` — `AppUserDTO`, `BetDTO` (Firebase) + `BackendUserDTO`, `PhoneLoginRequestDTO`, `PhoneConfirmRequestDTO`, `UpdateUserProfileRequestDTO` (novos).
-  - `Mappers/` — `AppUserMapper` (Firebase/Firestore) + `BackendUserMapper` (novo).
+  - `Repositories/` — Implementações de repositórios backend e Firebase; inclui `PhoneAuthRepository.swift`, `BackendUserRepository.swift`, `BackendParticipantRepository.swift`, `BackendBetRepository.swift`.
+  - `DTOs/` — `AppUserDTO`, `BetDTO` (Firebase) + `BackendUserDTO`, `ParticipantBackendDTO`, `BetBackendDTO`, `PhoneLoginRequestDTO`, `PhoneConfirmRequestDTO`, `UpdateUserProfileRequestDTO` (novos).
+  - `Mappers/` — `AppUserMapper` (Firebase/Firestore) + `BackendUserMapper`, `ParticipantBackendMapper`, `BetBackendMapper`.
 - `Domain/` — Entidades, protocolos e use cases
   - `Entities/` — `AppUser` (campo `phone: String?` adicionado), `Bet`, `BetStatus`, `PrizeType`.
   - `Protocols/` — `AuthRepository`, `UserRepository`, `BetRepository` (Firebase, preservados) + `PhoneAuthRepositoryProtocol` (novo).
-  - `UseCases/` — Use cases de apostas (inalterados) + `LoginWithPhoneUseCase`, `ConfirmPhoneLoginUseCase`, `UpdateUserProfileUseCase` (novos).
+  - `UseCases/` — Use cases de apostas (`ObserveBetsUseCase`, `CreateBetUseCase`, `ProposeWinnerUseCase`, `ConfirmWinnerUseCase`, `RejectWinnerUseCase`, `CancelBetUseCase`, `UpdateBetResultUseCase`, `VoteOnBetUseCase`) + `LoginWithPhoneUseCase`, `ConfirmPhoneLoginUseCase`, `UpdateUserProfileUseCase`.
 - `Presentation/` — Views e ViewModels (SwiftUI)
   - `Auth/` — `AuthView`, `AuthViewModel`, `RegisterView`, `RegisterViewModel`, `DisplayNameOnboardingView`, `DisplayNameOnboardingViewModel` — **preservados, atualmente não exibidos**.
   - `PhoneAuth/` — ⚠️ *Novo (entrega acadêmica)* — `PhoneAuthView`, `PhoneAuthViewModel`, `BackendDisplayNameOnboardingView`, `BackendDisplayNameOnboardingViewModel`.
@@ -296,12 +301,18 @@ A sessão é persistida via `UserDefaults` com os seguintes campos:
 | `session_userId` | ID do usuário retornado pelo backend |
 | `session_phone` | Número de telefone |
 | `session_name` | Apelido/nome de exibição |
+| `session_description` | Descrição/bio do usuário |
+| `session_photoURL` | URL da foto de perfil |
+| `session_uuid` | UUID do dispositivo |
 | `session_createdAt` | Data de criação (timestamp Unix) |
 | `session_jwt` | Token JWT (opcional; salvo apenas quando o backend retorna token/header Authorization) |
 
 - `SessionManager.save(user:)` — persiste e publica o usuário logado
+- `SessionManager.save(authSession:)` — persiste JWT + dados completos da sessão após login/confirm
 - `SessionManager.updateDisplayName(_:)` — atualiza apenas o nome (após onboarding)
 - `SessionManager.clear()` — remove a sessão (logout)
+- `SessionManager.authToken` — getter do JWT usado nos requests autenticados
+- `SessionManager.storedUUID` — getter do UUID persistido em sessão
 
 ### Onboarding de Apelido — Backend (`BackendDisplayNameOnboardingView`)
 
@@ -310,11 +321,11 @@ Exibido quando o usuário logado ainda não tem `displayName` preenchido.
 - Campo de apelido (mín. 2 caracteres, validado por `Validators.validateDisplayName`)
 - Botão **Continuar** — chama `PUT /users/{id}` via `UpdateUserProfileUseCase`, salva na sessão e redireciona ao feed
 
-### Autenticacao por telefone (RDV WODBet Auth Server)
+### Fluxo detalhado do Auth Server (RDV WODBet)
 
-Esta versão utiliza temporariamente o backend **RDV WODBet Auth Server** para autenticacao por telefone, mantendo toda a infraestrutura Firebase no projeto para retorno futuro.
+Esta versão utiliza temporariamente o backend **RDV WODBet Auth Server** para autenticação por telefone, mantendo toda a infraestrutura Firebase no projeto para retorno futuro.
 
-#### Arquitetura utilizada
+### Arquitetura utilizada
 
 ```text
 PhoneAuthView
@@ -327,25 +338,15 @@ PhoneAuthView
 -> SessionManager (UserDefaults)
 ```
 
-#### UUID do dispositivo (`identifierForVendor`)
+### Fluxo completo de login
 
-O UUID enviado ao backend e o valor retornado diretamente pelo sistema:
-
-```swift
-UIDevice.current.identifierForVendor?.uuidString
-```
-
-Nao ha geracao manual de UUID no fluxo ativo.
-
-#### Fluxo completo de login
-
-1. Usuario informa apenas `phone`.
+1. Usuário informa apenas `phone`.
 2. App coleta `uuid` do dispositivo.
 3. App envia `POST /users/login`.
-4. Se HTTP `200`: aceita resposta `token + user` **ou** usuario direto, salva sessao local e navega para Home.
-5. Se HTTP `202`: navega automaticamente para confirmacao e mantem `phone` + `uuid` em memoria.
+4. Se HTTP `200`: aceita resposta `token + user` **ou** usuário direto, salva sessão local e navega para o Feed.
+5. Se HTTP `202`: navega automaticamente para confirmação e mantém `phone` + `uuid` em memória.
 
-Request:
+**Request:**
 
 ```json
 {
@@ -354,7 +355,7 @@ Request:
 }
 ```
 
-Response HTTP 200 (exemplo):
+**Response HTTP 200 (exemplo):**
 
 ```json
 {
@@ -369,7 +370,7 @@ Response HTTP 200 (exemplo):
 }
 ```
 
-Response HTTP 200 (alternativo, usuario direto):
+**Response HTTP 200 (alternativo, usuário direto):**
 
 ```json
 {
@@ -381,17 +382,17 @@ Response HTTP 200 (alternativo, usuario direto):
 }
 ```
 
-Response HTTP 202: sem sessao autenticada; app exibe etapa de codigo.
+**Response HTTP 202:** sem sessão autenticada; app exibe etapa de código.
 
-#### Fluxo de confirmacao
+### Fluxo de confirmação
 
-1. Usuario informa `code`.
-2. App reutiliza `phone` + `uuid` mantidos em memoria (nao solicita novamente).
+1. Usuário informa `code`.
+2. App reutiliza `phone` + `uuid` mantidos em memória (não solicita novamente).
 3. App envia `POST /users/confirm`.
-4. Se HTTP `200`: decodifica usuario confirmado (sem exigir JWT), salva sessao local e navega para Home.
-5. Se HTTP `404`: exibe mensagem amigavel **"Codigo invalido ou expirado."**.
+4. Se HTTP `200`: decodifica usuário confirmado (sem exigir JWT), salva sessão local e navega para o Feed.
+5. Se HTTP `404`: exibe mensagem amigável **"Código inválido ou expirado."**.
 
-Request:
+**Request:**
 
 ```json
 {
@@ -401,7 +402,7 @@ Request:
 }
 ```
 
-Response HTTP 200 (formato atual do backend):
+**Response HTTP 200 (formato atual do backend):**
 
 ```json
 {
@@ -413,7 +414,7 @@ Response HTTP 200 (formato atual do backend):
 }
 ```
 
-Response HTTP 200 (formato alternativo aceito):
+**Response HTTP 200 (formato alternativo aceito):**
 
 ```json
 {
@@ -428,7 +429,7 @@ Response HTTP 200 (formato alternativo aceito):
 }
 ```
 
-#### Atualizacao de perfil
+### Atualização de perfil
 
 Endpoint utilizado: `PUT /users/{id}`
 
@@ -438,7 +439,7 @@ Campos suportados:
 - `phone`
 - `photoUrl`
 
-Request:
+**Request:**
 
 ```json
 {
@@ -449,33 +450,27 @@ Request:
 }
 ```
 
-#### Codigos HTTP esperados e mensagens
+### Códigos HTTP esperados e mensagens
 
 | HTTP | Mensagem no app |
 |---|---|
-| 400 | Dados invalidos. |
-| 401 | Credenciais invalidas. |
-| 404 | Codigo invalido ou expirado. |
+| 400 | Dados inválidos. |
+| 401 | Credenciais inválidas. |
+| 404 | Código inválido ou expirado. |
 | 500 | Erro interno do servidor. |
 
-#### Persistencia da sessao
+### Persistência da sessão
 
-Apos autenticacao (login 200 ou confirmacao 200), o app persiste localmente via `SessionManager`:
+Após autenticação (login 200 ou confirmação 200), o app persiste localmente via `SessionManager`:
 
 - JWT (opcional)
-- id do usuario
+- id do usuário
 - telefone
 - uuid
 - nome
-- descricao
+- descrição
 
-Na abertura do app, se existir sessao local valida com `userId`, o login nao e exibido e o usuario segue para o fluxo autenticado. Se existir JWT, ele tambem e validado por expiracao.
-
-#### Integracao com Firebase (preservada)
-
-- Nenhuma classe Firebase foi removida.
-- O fluxo Firebase permanece no projeto para reutilizacao futura.
-- A ativacao atual do Auth Server foi feita por isolamento em DI/navegacao e por implementacao alternativa da camada de autenticacao.
+Na abertura do app, se existir sessão local válida com `userId`, o login não é exibido e o usuário segue para o fluxo autenticado. Se existir JWT, ele também é validado por expiração.
 
 ---
 
@@ -544,6 +539,19 @@ Tela principal do aplicativo.
 - Recarregamento do feed ao reabrir a tela ou após ações que alterem o estado da aposta
 - Ordenação por data (mais recentes primeiro)
 - Estado vazio com CTA para criar a primeira aposta
+
+### Compatibilidade de payload no `GET /bets`
+
+O parse de apostas no app está tolerante ao formato retornado pelo backend Java:
+
+- Aceita resposta como **array puro** (`[BetBackendDTO]`) ou **envelope** com `items`, `content`, `data` ou `results`
+- Também resolve envelope aninhado (ex.: paginação Spring com `content`)
+- `id` e IDs relacionados podem vir como string ou número
+- Campos opcionais ausentes usam defaults seguros (`votesByUserId = [:]`, `athleteAConfirmed = false`, `athleteBConfirmed = false`)
+- `status` e `prizeType` desconhecidos fazem fallback seguro no mapper (`.open` e `.water`)
+- Datas inválidas/ausentes não quebram o parse
+
+Quando o decode de coleção falha, `BackendAPIClient.decodeCollection` imprime temporariamente o body bruto para debug.
 
 ### Cada card do feed mostra
 - Atletas envolvidos
@@ -760,17 +768,26 @@ O app já chama `FirebaseConfigurator.configure()` no `RDVWODBetApp` para inicia
   - `GoogleService-Info.plist` — Configuração do Firebase (substituir pelo seu)
 - `Data/Backend/` — ⚠️ *Novo*:
   - `PhoneAuthRemoteDataSource.swift` — HTTP via `URLSession` + Combine; rotas `POST /users/login`, `POST /users/confirm`, `PUT /users/{id}`; define enum `PhoneLoginRawResult`
+  - `BackendUserRemoteDataSource.swift` — HTTP de usuários (`GET /users`, `GET /users/{id}`, `PUT /users/{id}`)
+  - `BackendParticipantRemoteDataSource.swift` — HTTP de participantes (`GET`, `POST`, `PATCH`)
+  - `BackendBetRemoteDataSource.swift` — HTTP de apostas (`GET /bets`, criação, voto, confirmação, disputa, cancelamento, resultado)
+  - `BackendAPIClient.swift` — cliente HTTP compartilhado e decode de coleções (`array`, `items`, `content`, `data`, `results`)
 - `Data/Session/` — ⚠️ *Novo*:
-  - `SessionManager.swift` — Sessão local via `UserDefaults`; métodos `save(user:)`, `updateDisplayName(_:)`, `clear()`
+  - `SessionManager.swift` — Sessão local via `UserDefaults`; métodos `save(user:)`, `save(authSession:)`, `updateDisplayName(_:)`, `clear()`
 - `Data/DTOs/` — *Novos*:
   - `BackendUserDTO.swift` — Resposta JSON do backend (id, name, phone, uuid, active, createdAt)
+  - `ParticipantBackendDTO.swift` — DTO de participantes no backend Java
+  - `BetBackendDTO.swift` — DTO de apostas com decode tolerante (string/número, campos opcionais, `athleteA`/`athleteB` objeto)
   - `PhoneLoginRequestDTO.swift` — Body do `POST /users/login`
   - `PhoneConfirmRequestDTO.swift` — Body do `POST /users/confirm`
   - `UpdateUserProfileRequestDTO.swift` — Body do `PUT /users/{id}`
 - `Data/Mappers/` — *Novo*:
   - `BackendUserMapper.swift` — Converte `BackendUserDTO` → `AppUser`
+  - `ParticipantBackendMapper.swift` — Converte `ParticipantBackendDTO` → `Participant`
+  - `BetBackendMapper.swift` — Converte `BetBackendDTO` → `Bet` com fallbacks seguros
 - `Data/Repositories/` — *Novo*:
   - `PhoneAuthRepository.swift` — Implementa `PhoneAuthRepositoryProtocol`; mapeia DTOs para entidades de domínio
+  - `BackendUserRepository.swift`, `BackendParticipantRepository.swift`, `BackendBetRepository.swift` — repositórios REST para o fluxo ativo
 - `Data/Firebase/` — *Preservados*:
   - `FirebaseAuthDataSource.swift` — signIn, signUp, sendPasswordReset, observeAuthState, signOut
   - `FirestoreUserDataSource.swift`
@@ -781,6 +798,7 @@ O app já chama `FirebaseConfigurator.configure()` no `RDVWODBetApp` para inicia
   - `LoginWithPhoneUseCase.swift`
   - `ConfirmPhoneLoginUseCase.swift`
   - `UpdateUserProfileUseCase.swift`
+  - `UpdateBetResultUseCase.swift` — atualização de resultado da aposta no backend
 - `Presentation/PhoneAuth/` — ⚠️ *Novo*:
   - `PhoneAuthView.swift` — Tela com etapas de telefone e código de confirmação
   - `PhoneAuthViewModel.swift` — Estados `.enterPhone` / `.enterCode`; usa `UIDevice.identifierForVendor`
