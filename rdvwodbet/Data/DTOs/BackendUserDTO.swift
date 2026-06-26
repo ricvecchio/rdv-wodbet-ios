@@ -62,7 +62,7 @@ struct BackendUserDTO: Decodable {
 }
 
 struct AuthServerSessionDTO {
-    let jwt: String
+    let jwt: String?
     let user: BackendUserDTO
 }
 
@@ -80,6 +80,43 @@ struct AuthServerResponseDTO: Decodable {
     let description: String?
     let photoUrl: String?
     let createdAt: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case token
+        case jwt
+        case accessToken
+        case access_token
+        case user
+        case id
+        case name
+        case phone
+        case uuid
+        case active
+        case description
+        case photoUrl
+        case photoURL
+        case createdAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        token = try container.decodeIfPresent(String.self, forKey: .token)
+        jwt = try container.decodeIfPresent(String.self, forKey: .jwt)
+        accessToken = try container.decodeIfPresent(String.self, forKey: .accessToken)
+            ?? (try container.decodeIfPresent(String.self, forKey: .access_token))
+        user = try container.decodeIfPresent(BackendUserDTO.self, forKey: .user)
+
+        id = try container.decodeIfPresent(String.self, forKey: .id)
+        name = try container.decodeIfPresent(String.self, forKey: .name)
+        phone = try container.decodeIfPresent(String.self, forKey: .phone)
+        uuid = try container.decodeIfPresent(String.self, forKey: .uuid)
+        active = try container.decodeIfPresent(Bool.self, forKey: .active)
+        description = try container.decodeIfPresent(String.self, forKey: .description)
+        let primaryPhoto = try container.decodeIfPresent(String.self, forKey: .photoUrl)
+        let legacyPhoto = try container.decodeIfPresent(String.self, forKey: .photoURL)
+        photoUrl = primaryPhoto ?? legacyPhoto
+        createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt)
+    }
 
     var resolvedToken: String? {
         token ?? jwt ?? accessToken

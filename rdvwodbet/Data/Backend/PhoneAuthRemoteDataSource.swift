@@ -42,7 +42,7 @@ final class PhoneAuthRemoteDataSource {
 
         return makeRequest(url: url, method: "POST", body: body)
             .tryMap { (data, response) -> AuthServerSessionDTO in
-                try Self.parseAuthSessionResponse(data: data, response: response)
+                try Self.parseConfirmResponse(data: data, response: response)
             }
             .mapError(Self.mapError)
             .eraseToAnyPublisher()
@@ -115,19 +115,44 @@ final class PhoneAuthRemoteDataSource {
             throw errorForStatus(http.statusCode, data: data)
         }
 
-        let authResponse = try decodeAuthResponse(from: data)
-        let jwtFromHeader = extractJWTFromAuthorizationHeader(http)
-        guard let jwt = (authResponse.resolvedToken ?? jwtFromHeader)?.trimmingCharacters(in: .whitespacesAndNewlines),
-              !jwt.isEmpty
-        else {
-            throw AppError.network("Resposta de autenticação inválida.")
+        let jwtFromHeader = normalizeToken(extractJWTFromAuthorizationHeader(http))
+
+        if let authResponse = try? decodeAuthResponse(from: data),
+           let user = authResponse.resolvedUser {
+            let jwt = normalizeToken(authResponse.resolvedToken) ?? jwtFromHeader
+            return AuthServerSessionDTO(jwt: jwt, user: user)
         }
 
+        // Compatibilidade: backend pode retornar diretamente o usuário no body.
+        let directUser = try decodeUser(from: data)
+        return AuthServerSessionDTO(jwt: jwtFromHeader, user: directUser)
+    }
+
+    private static func parseConfirmResponse(data: Data, response: URLResponse) throws -> AuthServerSessionDTO {
+        guard let http = response as? HTTPURLResponse else {
+            throw AppError.network("Resposta inválida do servidor.")
+        }
+        guard http.statusCode == 200 else {
+            throw errorForStatus(http.statusCode, data: data)
+        }
+
+        // Fluxo acadêmico atual: /users/confirm retorna apenas usuário (sem JWT).
+        if let user = try? decodeUser(from: data) {
+            return AuthServerSessionDTO(
+                jwt: normalizeToken(extractJWTFromAuthorizationHeader(http)),
+                user: user
+            )
+        }
+
+        // Fallback para formato encapsulado (token + user), se backend alternar payload.
+        let authResponse = try decodeAuthResponse(from: data)
         guard let user = authResponse.resolvedUser else {
             throw AppError.network("Dados do usuário não foram retornados.")
         }
-
-        return AuthServerSessionDTO(jwt: jwt, user: user)
+        return AuthServerSessionDTO(
+            jwt: normalizeToken(authResponse.resolvedToken) ?? normalizeToken(extractJWTFromAuthorizationHeader(http)),
+            user: user
+        )
     }
 
     private static func parseUserResponse(data: Data, response: URLResponse) throws -> BackendUserDTO {
@@ -196,6 +221,13 @@ final class PhoneAuthRemoteDataSource {
             return String(rawValue.dropFirst(prefix.count))
         }
         return rawValue
+    }
+
+    private static func normalizeToken(_ token: String?) -> String? {
+        guard let token = token?.trimmingCharacters(in: .whitespacesAndNewlines), !token.isEmpty else {
+            return nil
+        }
+        return token
     }
 
     private static func mapError(_ error: Error) -> AppError {

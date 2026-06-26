@@ -7,26 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		096D938BD856300FB4D0326E /* PhoneAuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F06C17FCA63A46D4C5845C /* PhoneAuthViewModel.swift */; };
 		0C87CB212F1D9212005DAAA3 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 0C87CB202F1D9212005DAAA3 /* FirebaseAuth */; };
 		0C87CB232F1D9212005DAAA3 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 0C87CB222F1D9212005DAAA3 /* FirebaseCore */; };
 		0C87CB252F1D9212005DAAA3 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 0C87CB242F1D9212005DAAA3 /* FirebaseFirestore */; };
-		1447B386F1C41906D52E35C7 /* PhoneLoginRequestDTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1760F046AF4F5F90CEC624 /* PhoneLoginRequestDTO.swift */; };
-		160CB8C858C3D0C8C8467917 /* ConfirmPhoneLoginUseCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9050E17E382F50C5ECF0610 /* ConfirmPhoneLoginUseCase.swift */; };
-		1EB31DF92771B437E5789FC9 /* PhoneAuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE3D35B01BB4E842C27B2576 /* PhoneAuthView.swift */; };
-		1EC98AADD8E3AF57576A87C3 /* PhoneAuthRepositoryProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 622CF3AA97ED24BA7787BCD8 /* PhoneAuthRepositoryProtocol.swift */; };
-		2779807B673036FFE71A1BD0 /* BackendUserDTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78274288E7D071C9FE8D6A7B /* BackendUserDTO.swift */; };
-		2D146D00E656BE07D1E988F4 /* AppUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1415C1247E8F3AFA450E28F /* AppUser.swift */; };
-		3F980A4AECF55E8A5A7B5D6C /* UpdateUserProfileUseCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 065D146D8383CE31F1745A98 /* UpdateUserProfileUseCase.swift */; };
-		3FA1A1BF87280F7E83351716 /* UpdateUserProfileRequestDTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62855F23EF358EB410BBCB23 /* UpdateUserProfileRequestDTO.swift */; };
-		7C8B92F4E875DFBDDD5DA864 /* BackendDisplayNameOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E896C45D9B5828A8ACF9F66 /* BackendDisplayNameOnboardingView.swift */; };
-		A895F32DDD42EF6DFCBDCB4C /* PhoneAuthRemoteDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44FCA641FC9039074B22FB4E /* PhoneAuthRemoteDataSource.swift */; };
-		B9A37504D96FCF7B2CFA5C07 /* BackendUserMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 601B5DDBA77DA58B40A50113 /* BackendUserMapper.swift */; };
-		BC811009978BB896213BE63F /* BackendDisplayNameOnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00454AA246687FDADFF44342 /* BackendDisplayNameOnboardingViewModel.swift */; };
-		D55D170CA38FAA727E2DD0F2 /* PhoneConfirmRequestDTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E6868E9386263AB2AD49DAE /* PhoneConfirmRequestDTO.swift */; };
-		E22652AC0B6164CBF04CA3F4 /* PhoneAuthRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65E77A88AD77DD2EE2C1A3FF /* PhoneAuthRepository.swift */; };
-		F0D6A78559E6037757A4834B /* LoginWithPhoneUseCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 125C36D4EB054F44B0D86062 /* LoginWithPhoneUseCase.swift */; };
-		FAB01C79B634E0494859D3BB /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E1355AF78C2D65D7F46188 /* SessionManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -40,39 +23,18 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		00454AA246687FDADFF44342 /* BackendDisplayNameOnboardingViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BackendDisplayNameOnboardingViewModel.swift; path = ../../rdvwodbet/Presentation/PhoneAuth/BackendDisplayNameOnboardingViewModel.swift; sourceTree = "<group>"; };
-		065D146D8383CE31F1745A98 /* UpdateUserProfileUseCase.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = UpdateUserProfileUseCase.swift; path = ../../rdvwodbet/Domain/UseCases/UpdateUserProfileUseCase.swift; sourceTree = "<group>"; };
 		0C07423D2F1EA935005DA363 /* rdvwodbet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = rdvwodbet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0C501DC92F6894D800AC9DCD /* rdvwodbetTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = rdvwodbetTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		125C36D4EB054F44B0D86062 /* LoginWithPhoneUseCase.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LoginWithPhoneUseCase.swift; path = ../../rdvwodbet/Domain/UseCases/LoginWithPhoneUseCase.swift; sourceTree = "<group>"; };
-		27E1355AF78C2D65D7F46188 /* SessionManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SessionManager.swift; path = ../../rdvwodbet/Data/Session/SessionManager.swift; sourceTree = "<group>"; };
-		44FCA641FC9039074B22FB4E /* PhoneAuthRemoteDataSource.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PhoneAuthRemoteDataSource.swift; path = ../../rdvwodbet/Data/Backend/PhoneAuthRemoteDataSource.swift; sourceTree = "<group>"; };
-		4E6868E9386263AB2AD49DAE /* PhoneConfirmRequestDTO.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PhoneConfirmRequestDTO.swift; path = ../../rdvwodbet/Data/DTOs/PhoneConfirmRequestDTO.swift; sourceTree = "<group>"; };
-		4E896C45D9B5828A8ACF9F66 /* BackendDisplayNameOnboardingView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BackendDisplayNameOnboardingView.swift; path = ../../rdvwodbet/Presentation/PhoneAuth/BackendDisplayNameOnboardingView.swift; sourceTree = "<group>"; };
-		601B5DDBA77DA58B40A50113 /* BackendUserMapper.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BackendUserMapper.swift; path = ../../rdvwodbet/Data/Mappers/BackendUserMapper.swift; sourceTree = "<group>"; };
-		622CF3AA97ED24BA7787BCD8 /* PhoneAuthRepositoryProtocol.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PhoneAuthRepositoryProtocol.swift; path = ../../rdvwodbet/Domain/Protocols/PhoneAuthRepositoryProtocol.swift; sourceTree = "<group>"; };
-		62855F23EF358EB410BBCB23 /* UpdateUserProfileRequestDTO.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = UpdateUserProfileRequestDTO.swift; path = ../../rdvwodbet/Data/DTOs/UpdateUserProfileRequestDTO.swift; sourceTree = "<group>"; };
-		65E77A88AD77DD2EE2C1A3FF /* PhoneAuthRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PhoneAuthRepository.swift; path = ../../rdvwodbet/Data/Repositories/PhoneAuthRepository.swift; sourceTree = "<group>"; };
-		78274288E7D071C9FE8D6A7B /* BackendUserDTO.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BackendUserDTO.swift; path = ../../rdvwodbet/Data/DTOs/BackendUserDTO.swift; sourceTree = "<group>"; };
-		7C1760F046AF4F5F90CEC624 /* PhoneLoginRequestDTO.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PhoneLoginRequestDTO.swift; path = ../../rdvwodbet/Data/DTOs/PhoneLoginRequestDTO.swift; sourceTree = "<group>"; };
-		99F06C17FCA63A46D4C5845C /* PhoneAuthViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PhoneAuthViewModel.swift; path = ../../rdvwodbet/Presentation/PhoneAuth/PhoneAuthViewModel.swift; sourceTree = "<group>"; };
-		A9050E17E382F50C5ECF0610 /* ConfirmPhoneLoginUseCase.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConfirmPhoneLoginUseCase.swift; path = ../../rdvwodbet/Domain/UseCases/ConfirmPhoneLoginUseCase.swift; sourceTree = "<group>"; };
-		D1415C1247E8F3AFA450E28F /* AppUser.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AppUser.swift; path = ../../rdvwodbet/Domain/Entities/AppUser.swift; sourceTree = "<group>"; };
-		FE3D35B01BB4E842C27B2576 /* PhoneAuthView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PhoneAuthView.swift; path = ../../rdvwodbet/Presentation/PhoneAuth/PhoneAuthView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0C501DCA2F6894D800AC9DCD /* rdvwodbetTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = rdvwodbetTests;
 			sourceTree = "<group>";
 		};
 		0CA0DFE12F1D6139000AD368 /* rdvwodbet */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = rdvwodbet;
 			sourceTree = "<group>";
 		};
@@ -106,132 +68,7 @@
 				0C07423D2F1EA935005DA363 /* rdvwodbet.app */,
 				0C501DC92F6894D800AC9DCD /* rdvwodbetTests.xctest */,
 				0C501DCA2F6894D800AC9DCD /* rdvwodbetTests */,
-				2CD232C94A0F888E4DA09EE4 /* Domain */,
-				BED0EC34E99A3B598ED77166 /* Data */,
-				FB26667147B0128E5B2C253B /* Presentation */,
 			);
-			sourceTree = "<group>";
-		};
-		2CD232C94A0F888E4DA09EE4 /* Domain */ = {
-			isa = PBXGroup;
-			children = (
-				FFC2756E611702C31610725B /* Entities */,
-				69B3B12BD3FEFDB2989427DE /* Protocols */,
-				8B813A8BDDDC02CE961D9555 /* UseCases */,
-			);
-			name = Domain;
-			path = Domain;
-			sourceTree = "<group>";
-		};
-		65C914F3A24FE2B25DCA4B1A /* Repositories */ = {
-			isa = PBXGroup;
-			children = (
-				65E77A88AD77DD2EE2C1A3FF /* PhoneAuthRepository.swift */,
-			);
-			name = Repositories;
-			path = Repositories;
-			sourceTree = "<group>";
-		};
-		69B3B12BD3FEFDB2989427DE /* Protocols */ = {
-			isa = PBXGroup;
-			children = (
-				622CF3AA97ED24BA7787BCD8 /* PhoneAuthRepositoryProtocol.swift */,
-			);
-			name = Protocols;
-			path = Protocols;
-			sourceTree = "<group>";
-		};
-		748CBCD5B0326036F3D7A197 /* PhoneAuth */ = {
-			isa = PBXGroup;
-			children = (
-				99F06C17FCA63A46D4C5845C /* PhoneAuthViewModel.swift */,
-				FE3D35B01BB4E842C27B2576 /* PhoneAuthView.swift */,
-				00454AA246687FDADFF44342 /* BackendDisplayNameOnboardingViewModel.swift */,
-				4E896C45D9B5828A8ACF9F66 /* BackendDisplayNameOnboardingView.swift */,
-			);
-			name = PhoneAuth;
-			path = PhoneAuth;
-			sourceTree = "<group>";
-		};
-		75D13910BBD0CE8224BAD1A8 /* Session */ = {
-			isa = PBXGroup;
-			children = (
-				27E1355AF78C2D65D7F46188 /* SessionManager.swift */,
-			);
-			name = Session;
-			path = Session;
-			sourceTree = "<group>";
-		};
-		8B813A8BDDDC02CE961D9555 /* UseCases */ = {
-			isa = PBXGroup;
-			children = (
-				125C36D4EB054F44B0D86062 /* LoginWithPhoneUseCase.swift */,
-				A9050E17E382F50C5ECF0610 /* ConfirmPhoneLoginUseCase.swift */,
-				065D146D8383CE31F1745A98 /* UpdateUserProfileUseCase.swift */,
-			);
-			name = UseCases;
-			path = UseCases;
-			sourceTree = "<group>";
-		};
-		BED0EC34E99A3B598ED77166 /* Data */ = {
-			isa = PBXGroup;
-			children = (
-				BF33F5554D2CA33EE6F0A4E7 /* DTOs */,
-				E5E19D3B2EF2AF121ECD2437 /* Mappers */,
-				D18E43F5800294B522A40EDE /* Backend */,
-				65C914F3A24FE2B25DCA4B1A /* Repositories */,
-				75D13910BBD0CE8224BAD1A8 /* Session */,
-			);
-			name = Data;
-			path = Data;
-			sourceTree = "<group>";
-		};
-		BF33F5554D2CA33EE6F0A4E7 /* DTOs */ = {
-			isa = PBXGroup;
-			children = (
-				78274288E7D071C9FE8D6A7B /* BackendUserDTO.swift */,
-				7C1760F046AF4F5F90CEC624 /* PhoneLoginRequestDTO.swift */,
-				4E6868E9386263AB2AD49DAE /* PhoneConfirmRequestDTO.swift */,
-				62855F23EF358EB410BBCB23 /* UpdateUserProfileRequestDTO.swift */,
-			);
-			name = DTOs;
-			path = DTOs;
-			sourceTree = "<group>";
-		};
-		D18E43F5800294B522A40EDE /* Backend */ = {
-			isa = PBXGroup;
-			children = (
-				44FCA641FC9039074B22FB4E /* PhoneAuthRemoteDataSource.swift */,
-			);
-			name = Backend;
-			path = Backend;
-			sourceTree = "<group>";
-		};
-		E5E19D3B2EF2AF121ECD2437 /* Mappers */ = {
-			isa = PBXGroup;
-			children = (
-				601B5DDBA77DA58B40A50113 /* BackendUserMapper.swift */,
-			);
-			name = Mappers;
-			path = Mappers;
-			sourceTree = "<group>";
-		};
-		FB26667147B0128E5B2C253B /* Presentation */ = {
-			isa = PBXGroup;
-			children = (
-				748CBCD5B0326036F3D7A197 /* PhoneAuth */,
-			);
-			name = Presentation;
-			path = Presentation;
-			sourceTree = "<group>";
-		};
-		FFC2756E611702C31610725B /* Entities */ = {
-			isa = PBXGroup;
-			children = (
-				D1415C1247E8F3AFA450E28F /* AppUser.swift */,
-			);
-			name = Entities;
-			path = Entities;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -354,23 +191,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2D146D00E656BE07D1E988F4 /* AppUser.swift in Sources */,
-				1EC98AADD8E3AF57576A87C3 /* PhoneAuthRepositoryProtocol.swift in Sources */,
-				F0D6A78559E6037757A4834B /* LoginWithPhoneUseCase.swift in Sources */,
-				160CB8C858C3D0C8C8467917 /* ConfirmPhoneLoginUseCase.swift in Sources */,
-				3F980A4AECF55E8A5A7B5D6C /* UpdateUserProfileUseCase.swift in Sources */,
-				2779807B673036FFE71A1BD0 /* BackendUserDTO.swift in Sources */,
-				1447B386F1C41906D52E35C7 /* PhoneLoginRequestDTO.swift in Sources */,
-				D55D170CA38FAA727E2DD0F2 /* PhoneConfirmRequestDTO.swift in Sources */,
-				3FA1A1BF87280F7E83351716 /* UpdateUserProfileRequestDTO.swift in Sources */,
-				B9A37504D96FCF7B2CFA5C07 /* BackendUserMapper.swift in Sources */,
-				A895F32DDD42EF6DFCBDCB4C /* PhoneAuthRemoteDataSource.swift in Sources */,
-				E22652AC0B6164CBF04CA3F4 /* PhoneAuthRepository.swift in Sources */,
-				FAB01C79B634E0494859D3BB /* SessionManager.swift in Sources */,
-				096D938BD856300FB4D0326E /* PhoneAuthViewModel.swift in Sources */,
-				1EB31DF92771B437E5789FC9 /* PhoneAuthView.swift in Sources */,
-				BC811009978BB896213BE63F /* BackendDisplayNameOnboardingViewModel.swift in Sources */,
-				7C8B92F4E875DFBDDD5DA864 /* BackendDisplayNameOnboardingView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

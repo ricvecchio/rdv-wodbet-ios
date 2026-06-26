@@ -237,7 +237,7 @@ UIDevice.current.identifierForVendor?.uuidString
 
 | Código | Comportamento no app |
 |---|---|
-| 200 | Salva sessão, navega para o Feed |
+| 200 | Salva sessão local com o usuário (com ou sem JWT) e navega para o Feed |
 | 202 | Exibe campo de código + mensagem "Enviamos um código de confirmação para seu telefone." |
 | 400 / 401 | Exibe mensagem do backend ou "Código inválido. Verifique e tente novamente." |
 | 404 | Exibe "Nenhum código de confirmação foi encontrado para este telefone." |
@@ -254,6 +254,7 @@ A sessão é persistida via `UserDefaults` com os seguintes campos:
 | `session_phone` | Número de telefone |
 | `session_name` | Apelido/nome de exibição |
 | `session_createdAt` | Data de criação (timestamp Unix) |
+| `session_jwt` | Token JWT (opcional; salvo apenas quando o backend retorna token/header Authorization) |
 
 - `SessionManager.save(user:)` — persiste e publica o usuário logado
 - `SessionManager.updateDisplayName(_:)` — atualiza apenas o nome (após onboarding)
@@ -298,7 +299,7 @@ Nao ha geracao manual de UUID no fluxo ativo.
 1. Usuario informa apenas `phone`.
 2. App coleta `uuid` do dispositivo.
 3. App envia `POST /users/login`.
-4. Se HTTP `200`: salva JWT + usuario e navega para Home.
+4. Se HTTP `200`: aceita resposta `token + user` **ou** usuario direto, salva sessao local e navega para Home.
 5. Se HTTP `202`: navega automaticamente para confirmacao e mantem `phone` + `uuid` em memoria.
 
 Request:
@@ -325,6 +326,18 @@ Response HTTP 200 (exemplo):
 }
 ```
 
+Response HTTP 200 (alternativo, usuario direto):
+
+```json
+{
+  "id": "123",
+  "name": "Ricardo",
+  "description": "Atleta do box",
+  "phone": "+5511999999999",
+  "photoUrl": "https://..."
+}
+```
+
 Response HTTP 202: sem sessao autenticada; app exibe etapa de codigo.
 
 #### Fluxo de confirmacao
@@ -332,7 +345,7 @@ Response HTTP 202: sem sessao autenticada; app exibe etapa de codigo.
 1. Usuario informa `code`.
 2. App reutiliza `phone` + `uuid` mantidos em memoria (nao solicita novamente).
 3. App envia `POST /users/confirm`.
-4. Se HTTP `200`: salva JWT + usuario + id e navega para Home.
+4. Se HTTP `200`: decodifica usuario confirmado (sem exigir JWT), salva sessao local e navega para Home.
 5. Se HTTP `404`: exibe mensagem amigavel **"Codigo invalido ou expirado."**.
 
 Request:
@@ -345,7 +358,19 @@ Request:
 }
 ```
 
-Response HTTP 200 (exemplo):
+Response HTTP 200 (formato atual do backend):
+
+```json
+{
+  "id": "123",
+  "name": "Ricardo",
+  "description": "Atleta do box",
+  "phone": "+5511999999999",
+  "photoUrl": "https://..."
+}
+```
+
+Response HTTP 200 (formato alternativo aceito):
 
 ```json
 {
@@ -394,14 +419,14 @@ Request:
 
 Apos autenticacao (login 200 ou confirmacao 200), o app persiste localmente via `SessionManager`:
 
-- JWT
+- JWT (opcional)
 - id do usuario
 - telefone
 - uuid
 - nome
 - descricao
 
-Na abertura do app, se existir JWT nao expirado, o login nao e exibido e o usuario segue para o fluxo autenticado.
+Na abertura do app, se existir sessao local valida com `userId`, o login nao e exibido e o usuario segue para o fluxo autenticado. Se existir JWT, ele tambem e validado por expiracao.
 
 #### Integracao com Firebase (preservada)
 

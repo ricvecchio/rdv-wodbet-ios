@@ -63,7 +63,11 @@ final class SessionManager: ObservableObject {
     /// Salva JWT + usuário após autenticação no backend.
     func save(authSession: AuthSession) {
         defaults.set(true,                         forKey: Keys.isLoggedIn)
-        defaults.set(authSession.jwt,              forKey: Keys.jwt)
+        if let jwt = authSession.jwt?.trimmingCharacters(in: .whitespacesAndNewlines), !jwt.isEmpty {
+            defaults.set(jwt, forKey: Keys.jwt)
+        } else {
+            defaults.removeObject(forKey: Keys.jwt)
+        }
         defaults.set(authSession.user.id,          forKey: Keys.userId)
         defaults.set(authSession.phone,            forKey: Keys.phone)
         defaults.set(authSession.user.displayName, forKey: Keys.name)
@@ -109,11 +113,15 @@ final class SessionManager: ObservableObject {
         defer { isReady = true }
 
         guard defaults.bool(forKey: Keys.isLoggedIn),
-              let jwt = defaults.string(forKey: Keys.jwt),
-              !jwt.isEmpty,
-              Self.isTokenLikelyValid(jwt),
               let userId = defaults.string(forKey: Keys.userId), !userId.isEmpty
         else {
+            clear()
+            return
+        }
+
+        if let jwt = defaults.string(forKey: Keys.jwt),
+           !jwt.isEmpty,
+           !Self.isTokenLikelyValid(jwt) {
             clear()
             return
         }

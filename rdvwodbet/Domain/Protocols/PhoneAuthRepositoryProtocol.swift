@@ -14,7 +14,7 @@ enum PhoneLoginResult {
 
 /// Dados necessários para manter sessão autenticada no app.
 struct AuthSession: Equatable {
-    let jwt: String
+    let jwt: String?
     let user: AppUser
     let phone: String
     let uuid: String
