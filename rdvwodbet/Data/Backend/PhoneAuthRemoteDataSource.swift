@@ -14,10 +14,12 @@ final class PhoneAuthRemoteDataSource {
 
     private let baseURL: URL
     private let session: URLSession
+    private let authTokenProvider: () -> String?
 
-    init(baseURL: URL, session: URLSession = .shared) {
+    init(baseURL: URL, session: URLSession = .shared, authTokenProvider: @escaping () -> String? = { nil }) {
         self.baseURL = baseURL
         self.session = session
+        self.authTokenProvider = authTokenProvider
     }
 
     // MARK: - POST /users/login
@@ -79,6 +81,10 @@ final class PhoneAuthRemoteDataSource {
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+
+        if let token = authTokenProvider()?.trimmingCharacters(in: .whitespacesAndNewlines), !token.isEmpty {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
 
         do {
             request.httpBody = try JSONEncoder().encode(body)

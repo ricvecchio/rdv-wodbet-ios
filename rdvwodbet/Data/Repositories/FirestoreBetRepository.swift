@@ -20,7 +20,7 @@ final class FirestoreBetRepository: BetRepository {
         dataSource.createBet(betId: bet.id, data: BetMapper.toFirestore(bet))
     }
 
-    func proposeWinner(betId: String, proposedWinnerUserId: String) -> AnyPublisher<Void, AppError> {
+    func proposeWinner(betId: String, requesterUserId: String, proposedWinnerUserId: String) -> AnyPublisher<Void, AppError> {
         dataSource.setBet(betId: betId, data: [
             "proposedWinnerUserId": proposedWinnerUserId,
             "athleteAConfirmed": false,

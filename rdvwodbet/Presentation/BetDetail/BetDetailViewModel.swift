@@ -45,13 +45,17 @@ final class BetDetailViewModel: ObservableObject {
     }
 
     var isAthlete: Bool {
-        currentUser.id == bet.athleteAUserId || currentUser.id == bet.athleteBUserId
+        let isAthleteA = currentUser.id == bet.athleteAUserId
+        let isAthleteB = currentUser.id == bet.athleteBUserId
+        return isAthleteA || isAthleteB
     }
 
     var canEditBetResult: Bool {
         let isCreator = currentUser.id == bet.createdByUserId
-        let isParticipant = currentUser.id == bet.athleteAUserId || currentUser.id == bet.athleteBUserId
-        let isEditableStatus = bet.status == .open || bet.status == .disputed
+        let isParticipantA = currentUser.id == bet.athleteAUserId
+        let isParticipantB = currentUser.id == bet.athleteBUserId
+        let isParticipant = isParticipantA || isParticipantB
+        let isEditableStatus = bet.status == BetStatus.open || bet.status == BetStatus.disputed
         return isEditableStatus && (isCreator || isParticipant)
     }
 
@@ -67,7 +71,7 @@ final class BetDetailViewModel: ObservableObject {
 
     var canConfirmResult: Bool {
         guard isAthlete else { return false }
-        guard bet.status == .open || bet.status == .disputed else { return false }
+        guard bet.status == BetStatus.open || bet.status == BetStatus.disputed else { return false }
         return bet.proposedWinnerUserId != nil
     }
 
@@ -159,13 +163,13 @@ final class BetDetailViewModel: ObservableObject {
             guard let self else { return }
 
             self.bet = self.bet.updating(
-                status: .finished,
+                    status: BetStatus.finished,
                 proposedWinnerUserId: selectedWinnerUserId,
                 athleteAConfirmed: true,
                 athleteBConfirmed: true,
-                confirmedWinnerUserId: selectedWinnerUserId,
-                athleteAResult: .some(athleteAResult),
-                athleteBResult: .some(athleteBResult)
+                    confirmedWinnerUserId: selectedWinnerUserId,
+                    athleteAResult: athleteAResult,
+                    athleteBResult: athleteBResult
             )
         }
         .store(in: &cancellables)
@@ -175,7 +179,11 @@ final class BetDetailViewModel: ObservableObject {
         errorMessage = nil
         isWorking = true
 
-        proposeWinnerUseCase.execute(betId: bet.id, proposedWinnerUserId: userId)
+        proposeWinnerUseCase.execute(
+            betId: bet.id,
+            requesterUserId: currentUser.id,
+            proposedWinnerUserId: userId
+        )
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 guard let self else { return }
@@ -188,11 +196,11 @@ final class BetDetailViewModel: ObservableObject {
                 guard let self else { return }
 
                 self.bet = self.bet.updating(
-                    status: .open,
+                    status: BetStatus.open,
                     proposedWinnerUserId: userId,
                     athleteAConfirmed: false,
                     athleteBConfirmed: false,
-                    confirmedWinnerUserId: .some(nil)
+                    confirmedWinnerUserId: nil
                 )
                 self.selectedWinnerUserId = userId
             }
@@ -234,7 +242,7 @@ final class BetDetailViewModel: ObservableObject {
                 let didFinish = newAthleteAConfirmed && newAthleteBConfirmed
 
                 self.bet = self.bet.updating(
-                    status: didFinish ? .finished : self.bet.status,
+                    status: didFinish ? BetStatus.finished : self.bet.status,
                     athleteAConfirmed: newAthleteAConfirmed,
                     athleteBConfirmed: newAthleteBConfirmed,
                     confirmedWinnerUserId: didFinish ? self.bet.proposedWinnerUserId : self.bet.confirmedWinnerUserId
@@ -260,11 +268,11 @@ final class BetDetailViewModel: ObservableObject {
                 guard let self else { return }
 
                 self.bet = self.bet.updating(
-                    status: .disputed,
-                    proposedWinnerUserId: .some(nil),
+                    status: BetStatus.disputed,
+                    proposedWinnerUserId: nil,
                     athleteAConfirmed: false,
                     athleteBConfirmed: false,
-                    confirmedWinnerUserId: .some(nil)
+                    confirmedWinnerUserId: nil
                 )
                 self.selectedWinnerUserId = nil
             }
@@ -286,7 +294,7 @@ final class BetDetailViewModel: ObservableObject {
                 }
             } receiveValue: { [weak self] _ in
                 guard let self else { return }
-                self.bet = self.bet.updating(status: .canceled)
+                self.bet = self.bet.updating(status: BetStatus.canceled)
             }
             .store(in: &cancellables)
     }

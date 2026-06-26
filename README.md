@@ -6,7 +6,50 @@ Qualquer usuário autenticado pode criar uma aposta entre dois atletas com base 
 Todas as apostas ficam visíveis em um **feed público**, com status **Aberta**, **Finalizada**, **Cancelada**, **Em disputa** ou **Expirada**.  
 O resultado só é validado quando **ambos os atletas confirmam o vencedor**, garantindo fair play e mantendo a brincadeira organizada.
 
-> ⚠️ **Entrega Acadêmica — Login por Telefone:** o fluxo de autenticação por e-mail/senha do Firebase foi **temporariamente substituído** por um fluxo de login via telefone validado por um backend Java. Todos os arquivos Firebase permanecem intactos e comentados para facilitar a restauração futura. Veja a seção [Autenticação por Telefone](#autenticação-por-telefone) para detalhes.
+> ⚠️ **Entrega Acadêmica — Backend Java no fluxo principal:** o app continua com os arquivos Firebase/Firestore preservados no projeto, mas o fluxo principal após o login passou a consumir **users**, **participants** e **bets** diretamente do backend Java. O Firebase ficou isolado/comentado para possível retorno futuro.
+
+---
+
+## Migração do fluxo principal para o backend Java
+
+Após a autenticação por telefone + UUID, o app passa a usar a URL base configurada em `AppEnvironment.backendBaseURL` para consumir os dados principais do backend Java.
+
+### Endpoints utilizados no fluxo atual
+
+- **Usuários**
+  - `GET /users`
+  - `GET /users/{id}`
+  - `GET /users/{id}/raw`
+  - `PUT /users/{id}`
+- **Participantes**
+  - `GET /participants`
+  - `GET /participants/{id}`
+  - `POST /participants`
+  - `PATCH /participants/{id}`
+- **Apostas / Bets**
+  - `GET /bets`
+  - `GET /bets/{id}`
+  - `POST /bets`
+  - `PUT /bets/{id}/vote`
+  - `PUT /bets/{id}/winner`
+  - `PUT /bets/{id}/confirm`
+  - `PUT /bets/{id}/reject`
+  - `PUT /bets/{id}/cancel`
+  - `PUT /bets/{id}/result`
+
+### Estrutura de dados usada no app
+
+- `AppUser` representa o usuário logado e a lista de usuários exibida no feed/criação de aposta.
+- `Bet` continua sendo o modelo de domínio usado pela UI do feed e dos detalhes.
+- `Participant` foi adicionado como preparo para futuras telas/listas de participantes.
+
+### Configuração da URL base
+
+- **Simulador iOS:** `http://localhost:8080`
+- **Dispositivo físico:** use o IP do Mac na rede local, por exemplo `http://192.168.1.10:8080`
+- **Servidor remoto:** use a URL pública/HTTPS do backend, se disponível
+
+> A configuração principal fica em `App/AppEnvironment.swift`.
 
 ---
 
@@ -497,8 +540,8 @@ Sheet que abre ao tocar em "Esqueceu a senha?":
 Tela principal do aplicativo.
 
 ### Funcionalidades
-- Exibição de apostas em **tempo real** via Firestore snapshot listener
-- Atualização automática sem necessidade de refresh manual
+- Exibição de apostas carregadas via `GET /bets` no backend Java
+- Recarregamento do feed ao reabrir a tela ou após ações que alterem o estado da aposta
 - Ordenação por data (mais recentes primeiro)
 - Estado vazio com CTA para criar a primeira aposta
 
