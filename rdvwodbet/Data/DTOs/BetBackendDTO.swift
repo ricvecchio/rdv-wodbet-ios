@@ -1,6 +1,5 @@
 import Foundation
 import Combine
-// ...existing code...
 
 struct BetBackendDTO: Decodable {
     let id: String
@@ -69,108 +68,91 @@ struct BetBackendDTO: Decodable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        let athleteARef = try container.decodeIfPresent(BetUserReferenceDTO.self, forKey: .athleteA)
-        let athleteBRef = try container.decodeIfPresent(BetUserReferenceDTO.self, forKey: .athleteB)
-        let createdByRef = try container.decodeIfPresent(BetUserReferenceDTO.self, forKey: .createdBy)
-        let winnerRef = try container.decodeIfPresent(BetUserReferenceDTO.self, forKey: .winner)
-        let proposedWinnerRef = try container.decodeIfPresent(BetUserReferenceDTO.self, forKey: .proposedWinner)
-        let confirmedWinnerRef = try container.decodeIfPresent(BetUserReferenceDTO.self, forKey: .confirmedWinner)
+        let athleteARef = try? container.decodeIfPresent(BetUserReferenceDTO.self, forKey: .athleteA)
+        let athleteBRef = try? container.decodeIfPresent(BetUserReferenceDTO.self, forKey: .athleteB)
+        let createdByRef = try? container.decodeIfPresent(BetUserReferenceDTO.self, forKey: .createdBy)
+        let winnerRef = try? container.decodeIfPresent(BetUserReferenceDTO.self, forKey: .winner)
+        let proposedWinnerRef = try? container.decodeIfPresent(BetUserReferenceDTO.self, forKey: .proposedWinner)
+        let confirmedWinnerRef = try? container.decodeIfPresent(BetUserReferenceDTO.self, forKey: .confirmedWinner)
 
-        id = (try? Self.decodeStringFromStringOrNumber(container, forKey: .id)) ?? UUID().uuidString
-        createdByUserId = try (
-            Self.decodeOptionalStringFromStringOrNumber(container, forKey: .createdByUserId)
-            ?? Self.decodeOptionalStringFromStringOrNumber(container, forKey: .created_by_user_id)
+        id = (try? Self.decodeFlexibleString(container, forKey: .id)) ?? UUID().uuidString
+        createdByUserId = (try? Self.decodeFlexibleOptionalString(container, forKey: .createdByUserId))
+            ?? (try? Self.decodeFlexibleOptionalString(container, forKey: .created_by_user_id))
             ?? createdByRef?.resolvedUserId
             ?? ""
-        )
-        athleteAUserId = try (
-            Self.decodeOptionalStringFromStringOrNumber(container, forKey: .athleteAUserId)
-            ?? Self.decodeOptionalStringFromStringOrNumber(container, forKey: .athlete_a_user_id)
+        athleteAUserId = (try? Self.decodeFlexibleOptionalString(container, forKey: .athleteAUserId))
+            ?? (try? Self.decodeFlexibleOptionalString(container, forKey: .athlete_a_user_id))
             ?? athleteARef?.resolvedUserId
             ?? ""
-        )
-        athleteBUserId = try (
-            Self.decodeOptionalStringFromStringOrNumber(container, forKey: .athleteBUserId)
-            ?? Self.decodeOptionalStringFromStringOrNumber(container, forKey: .athlete_b_user_id)
+        athleteBUserId = (try? Self.decodeFlexibleOptionalString(container, forKey: .athleteBUserId))
+            ?? (try? Self.decodeFlexibleOptionalString(container, forKey: .athlete_b_user_id))
             ?? athleteBRef?.resolvedUserId
             ?? ""
-        )
 
-        wodTitle = try (
-            container.decodeIfPresent(String.self, forKey: .wodTitle)?.trimmedNonEmpty
-            ?? container.decodeIfPresent(String.self, forKey: .wod_title)?.trimmedNonEmpty
+        wodTitle = (try? Self.decodeFlexibleOptionalString(container, forKey: .wodTitle))
+            ?? (try? Self.decodeFlexibleOptionalString(container, forKey: .wod_title))
             ?? ""
-        )
-        prizeType = try (
-            container.decodeIfPresent(String.self, forKey: .prizeType)?.trimmedNonEmpty
-            ?? container.decodeIfPresent(String.self, forKey: .prize_type)?.trimmedNonEmpty
-            ?? PrizeType.water.rawValue
-        )
-        prizeOtherDescription = try (
-            container.decodeIfPresent(String.self, forKey: .prizeOtherDescription)?.trimmedNonEmpty
-            ?? container.decodeIfPresent(String.self, forKey: .prize_other_description)?.trimmedNonEmpty
-        )
-        status = (try container.decodeIfPresent(String.self, forKey: .status))?.trimmedNonEmpty ?? BetStatus.open.rawValue
+        prizeType = (try? Self.decodeFlexibleOptionalString(container, forKey: .prizeType))
+            ?? (try? Self.decodeFlexibleOptionalString(container, forKey: .prize_type))
+            ?? "water"  // Default fallback value
+        prizeOtherDescription = (try? Self.decodeFlexibleOptionalString(container, forKey: .prizeOtherDescription))
+            ?? (try? Self.decodeFlexibleOptionalString(container, forKey: .prize_other_description))
+        status = (try? Self.decodeFlexibleOptionalString(container, forKey: .status)) ?? "open"  // Default fallback value
 
-        winnerUserId = try (
-            Self.decodeOptionalStringFromStringOrNumber(container, forKey: .winnerUserId)
-            ?? Self.decodeOptionalStringFromStringOrNumber(container, forKey: .winner_user_id)
+        winnerUserId = (try? Self.decodeFlexibleOptionalString(container, forKey: .winnerUserId))
+            ?? (try? Self.decodeFlexibleOptionalString(container, forKey: .winner_user_id))
             ?? winnerRef?.resolvedUserId
-        )
-        proposedWinnerUserId = try (
-            Self.decodeOptionalStringFromStringOrNumber(container, forKey: .proposedWinnerUserId)
-            ?? Self.decodeOptionalStringFromStringOrNumber(container, forKey: .proposed_winner_user_id)
+        proposedWinnerUserId = (try? Self.decodeFlexibleOptionalString(container, forKey: .proposedWinnerUserId))
+            ?? (try? Self.decodeFlexibleOptionalString(container, forKey: .proposed_winner_user_id))
             ?? proposedWinnerRef?.resolvedUserId
-        )
-        confirmedWinnerUserId = try (
-            Self.decodeOptionalStringFromStringOrNumber(container, forKey: .confirmedWinnerUserId)
-            ?? Self.decodeOptionalStringFromStringOrNumber(container, forKey: .confirmed_winner_user_id)
+        confirmedWinnerUserId = (try? Self.decodeFlexibleOptionalString(container, forKey: .confirmedWinnerUserId))
+            ?? (try? Self.decodeFlexibleOptionalString(container, forKey: .confirmed_winner_user_id))
             ?? confirmedWinnerRef?.resolvedUserId
-        )
 
-        athleteAConfirmed =
-            Self.decodeOptionalBool(container, forKey: .athleteAConfirmed)
+        athleteAConfirmed = Self.decodeOptionalBool(container, forKey: .athleteAConfirmed)
             ?? Self.decodeOptionalBool(container, forKey: .athlete_a_confirmed)
             ?? false
-        athleteBConfirmed =
-            Self.decodeOptionalBool(container, forKey: .athleteBConfirmed)
+        athleteBConfirmed = Self.decodeOptionalBool(container, forKey: .athleteBConfirmed)
             ?? Self.decodeOptionalBool(container, forKey: .athlete_b_confirmed)
             ?? false
 
-        athleteAResult = try (
-            container.decodeIfPresent(String.self, forKey: .athleteAResult)?.trimmedNonEmpty
-            ?? container.decodeIfPresent(String.self, forKey: .athlete_a_result)?.trimmedNonEmpty
-        )
-        athleteBResult = try (
-            container.decodeIfPresent(String.self, forKey: .athleteBResult)?.trimmedNonEmpty
-            ?? container.decodeIfPresent(String.self, forKey: .athlete_b_result)?.trimmedNonEmpty
-        )
-        createdAt = try (
-            container.decodeIfPresent(String.self, forKey: .createdAt)?.trimmedNonEmpty
-            ?? container.decodeIfPresent(String.self, forKey: .created_at)?.trimmedNonEmpty
-        )
-        expiresAt = try (
-            container.decodeIfPresent(String.self, forKey: .expiresAt)?.trimmedNonEmpty
-            ?? container.decodeIfPresent(String.self, forKey: .expires_at)?.trimmedNonEmpty
-        )
+        athleteAResult = (try? Self.decodeFlexibleOptionalString(container, forKey: .athleteAResult))
+            ?? (try? Self.decodeFlexibleOptionalString(container, forKey: .athlete_a_result))
+        athleteBResult = (try? Self.decodeFlexibleOptionalString(container, forKey: .athleteBResult))
+            ?? (try? Self.decodeFlexibleOptionalString(container, forKey: .athlete_b_result))
+        createdAt = (try? Self.decodeFlexibleOptionalString(container, forKey: .createdAt))
+            ?? (try? Self.decodeFlexibleOptionalString(container, forKey: .created_at))
+        expiresAt = (try? Self.decodeFlexibleOptionalString(container, forKey: .expiresAt))
+            ?? (try? Self.decodeFlexibleOptionalString(container, forKey: .expires_at))
 
         votesByUserId = Self.decodeVotesByUserId(from: container)
     }
 
-    private static func decodeStringFromStringOrNumber(
+    /// Helper: decodes a String from a flexible format (String, Int, Int64, Double)
+    private static func decodeFlexibleString(
         _ container: KeyedDecodingContainer<CodingKeys>,
         forKey key: CodingKeys
     ) throws -> String {
-        guard let value = try Self.decodeOptionalStringFromStringOrNumber(container, forKey: key) else {
-            throw DecodingError.keyNotFound(
-                key,
-                DecodingError.Context(codingPath: container.codingPath, debugDescription: "Campo ausente: \(key.stringValue)")
-            )
+        if let value = try container.decodeIfPresent(String.self, forKey: key)?.trimmedNonEmpty {
+            return value
         }
-        return value
+        if let value = try container.decodeIfPresent(Int64.self, forKey: key) {
+            return String(value)
+        }
+        if let value = try container.decodeIfPresent(Int.self, forKey: key) {
+            return String(value)
+        }
+        if let raw = try container.decodeIfPresent(Double.self, forKey: key) {
+            return raw.truncatingRemainder(dividingBy: 1) == 0 ? String(Int64(raw)) : String(raw)
+        }
+        throw DecodingError.keyNotFound(
+            key,
+            DecodingError.Context(codingPath: container.codingPath, debugDescription: "Campo ausente: \(key.stringValue)")
+        )
     }
 
-    private static func decodeOptionalStringFromStringOrNumber(
+    /// Helper: decodes an optional String from a flexible format (String, Int, Int64, Double)
+    private static func decodeFlexibleOptionalString(
         _ container: KeyedDecodingContainer<CodingKeys>,
         forKey key: CodingKeys
     ) throws -> String? {
@@ -178,6 +160,9 @@ struct BetBackendDTO: Decodable {
             return value
         }
         if let value = try container.decodeIfPresent(Int64.self, forKey: key) {
+            return String(value)
+        }
+        if let value = try container.decodeIfPresent(Int.self, forKey: key) {
             return String(value)
         }
         if let raw = try container.decodeIfPresent(Double.self, forKey: key) {

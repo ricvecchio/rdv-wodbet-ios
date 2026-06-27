@@ -71,8 +71,10 @@ final class BackendAPIClient {
             return resolvedFromJSONObject
         }
 
-        // Temporary backend debugging aid: print the response body that failed to decode.
-        print(String(data: data, encoding: .utf8) ?? "Sem body")
+        // Log temporário para debugging: exibir o corpo da resposta que falhou ao decodificar
+        let responseBody = String(data: data, encoding: .utf8) ?? "sem body"
+        print("GET collection raw response:")
+        print(responseBody)
 
         throw AppError.network("Não foi possível interpretar a lista retornada pelo servidor.")
     }

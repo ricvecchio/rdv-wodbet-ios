@@ -16,6 +16,22 @@ final class BackendBetRemoteDataSource {
                 guard response.statusCode == 200 else {
                     throw BackendAPIClient.error(for: response.statusCode)
                 }
+
+                // Tentativa de decodificar diretamente como array vazio
+                if data.isEmpty {
+                    return []
+                }
+
+                // Verify if response is an error object from backend (contains error fields)
+                if let errorObject = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   errorObject["error"] != nil || errorObject["message"] != nil {
+                    // Backend returned an error response, not an array
+                    if let message = errorObject["message"] as? String {
+                        throw AppError.network("Erro do servidor: \(message)")
+                    }
+                    throw AppError.network("Erro ao carregar apostas.")
+                }
+
                 return try self.client.decodeCollection(BetBackendDTO.self, from: data)
             }
             .mapError { $0 as? AppError ?? AppError.network("Não foi possível carregar as apostas.") }

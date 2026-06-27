@@ -8,6 +8,8 @@ enum BackendBetMapper {
         let baseStatus = BetStatus(rawValue: normalizedStatus) ?? .open
         let expiresAt = parseDate(dto.expiresAt)
         let resolvedStatus = resolveStatus(baseStatus: baseStatus, expiresAt: expiresAt)
+
+        // Fallbacks robustos para campos de usuário
         let fallbackAthleteA = dto.athleteAUserId.nonEmptyOrNil ?? "athlete_a"
         let fallbackAthleteB = dto.athleteBUserId.nonEmptyOrNil ?? "athlete_b"
         let createdBy = dto.createdByUserId.nonEmptyOrNil ?? fallbackAthleteA
@@ -57,7 +59,9 @@ enum BackendBetMapper {
     }
 
     private static func parseDate(_ raw: String?) -> Date {
-        guard let raw else { return Date() }
+        guard let raw = raw?.trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty else {
+            return Date()
+        }
 
         let formatters: [ISO8601DateFormatter] = [
             {
@@ -74,10 +78,12 @@ enum BackendBetMapper {
             }
         }
 
+        // Tentativa de parsing de timestamp Unix
         if let timestamp = TimeInterval(raw) {
             return Date(timeIntervalSince1970: timestamp)
         }
 
+        // Fallback seguro: retorna data atual se não conseguir fazer parsing
         return Date()
     }
 

@@ -539,19 +539,24 @@ Tela principal do aplicativo.
 - Recarregamento do feed ao reabrir a tela ou após ações que alterem o estado da aposta
 - Ordenação por data (mais recentes primeiro)
 - Estado vazio com CTA para criar a primeira aposta
+- **Tolerância máxima a variações de payload**: suporta diferentes formatos de resposta, tipos de dados e campos ausentes sem quebras
 
-### Compatibilidade de payload no `GET /bets`
+### Robustez de decodificação
 
-O parse de apostas no app está tolerante ao formato retornado pelo backend Java:
+O app foi desenvolvido com máxima tolerância a variações de dados do backend:
 
-- Aceita resposta como **array puro** (`[BetBackendDTO]`) ou **envelope** com `items`, `content`, `data` ou `results`
-- Também resolve envelope aninhado (ex.: paginação Spring com `content`)
-- `id` e IDs relacionados podem vir como string ou número
-- Campos opcionais ausentes usam defaults seguros (`votesByUserId = [:]`, `athleteAConfirmed = false`, `athleteBConfirmed = false`)
-- `status` e `prizeType` desconhecidos fazem fallback seguro no mapper (`.open` e `.water`)
-- Datas inválidas/ausentes não quebram o parse
-
-Quando o decode de coleção falha, `BackendAPIClient.decodeCollection` imprime temporariamente o body bruto para debug.
+- **Múltiplos formatos de envelope**: reconhece respostas como array puro, ou envelopados em `items`, `content`, `data`, `results`, ou estruturas aninhadas
+- **Flexibilidade de tipos**: IDs aceitam `String`, `Int`, `Int64` ou `Double`, convertidos automaticamente
+- **Campos opcionais com fallbacks**: todos os campos não críticos usam defaults seguros:
+  - `id` → gera UUID se ausente
+  - `createdByUserId`, `athleteAUserId`, `athleteBUserId` → "" se ausentes
+  - `wodTitle` → "" se ausente
+  - `prizeType` → "water" se ausente
+  - `status` → "open" se ausente
+  - `athleteAConfirmed`, `athleteBConfirmed` → `false` se ausentes
+  - `votesByUserId` → `[:]` se ausente
+- **Parsing de datas**: suporta ISO8601 com/sem fractional seconds, timestamps Unix, ou usa data atual como fallback
+- **Status e enums resilientes**: valores desconhecidos fazem fallback para padrões seguros (`.open` para status, `.water` para tipo de prêmio)
 
 ### Cada card do feed mostra
 - Atletas envolvidos
@@ -560,6 +565,13 @@ Quando o decode de coleção falha, `BackendAPIClient.decodeCollection` imprime 
 - Status da aposta
 - Barra visual de votação com percentual por atleta
 - Nome do vencedor (quando finalizada)
+
+### Tratamento de respostas HTTP no feed
+
+- **HTTP 200 com array/envelope vazio**: exibe "Nenhuma aposta por aqui ainda." com opção de criar primeira aposta
+- **HTTP 200 com envelope de erro do backend**: detecta presença de campo `error` ou `message` e exibe a mensagem do servidor
+- **HTTP 200 com array válido**: carrega e exibe as apostas ordenadas por data (mais recentes primeiro)
+- **HTTP != 200**: exibe mensagem de erro apropriada via toast
 
 ### Votação no card
 Qualquer usuário autenticado pode votar em qual atleta vencerá enquanto a aposta estiver **Aberta** ou **Em disputa**.  
@@ -736,8 +748,9 @@ O app já chama `FirebaseConfigurator.configure()` no `RDVWODBetApp` para inicia
    - Verifique se o servidor Java está rodando e acessível no endereço configurado em `AppEnvironment.backendBaseURL`.
    - Verifique a exceção ATS no `Info.plist` se estiver usando `http://`.
 
-2. **Resposta inválida do servidor / erro de decodificação**
-   - Confirme que o backend retorna JSON com os campos `id`, `name`, `phone` (e `uuid`, `active`, `createdAt` opcionais) nas rotas de login e confirmação.
+2. **Erro ao carregar o feed após login**
+   - Confirme que o endpoint `GET /bets` retorna um array JSON válido (formato puro ou dentro de um envelope com chave `items`, `content`, `data` ou `results`).
+   - Se o backend retornar um envelope de erro com campos `error` e `message`, o app exibe a mensagem do servidor.
 
 3. **Código de confirmação sempre retorna 404**
    - O backend pode não ter código gerado para esse telefone + uuid. Tente refazer o fluxo desde o início com o mesmo número.
@@ -767,20 +780,23 @@ O app já chama `FirebaseConfigurator.configure()` no `RDVWODBetApp` para inicia
   - `FirebaseConfigurator.swift` — Inicialização do Firebase
   - `GoogleService-Info.plist` — Configuração do Firebase (substituir pelo seu)
 - `Data/Backend/` — ⚠️ *Novo*:
-  - `PhoneAuthRemoteDataSource.swift` — HTTP via `URLSession` + Combine; rotas `POST /users/login`, `POST /users/confirm`, `PUT /users/{id}`; define enum `PhoneLoginRawResult`
-  - `BackendUserRemoteDataSource.swift` — HTTP de usuários (`GET /users`, `GET /users/{id}`, `PUT /users/{id}`)
-  - `BackendParticipantRemoteDataSource.swift` — HTTP de participantes (`GET`, `POST`, `PATCH`)
-  - `BackendBetRemoteDataSource.swift` — HTTP de apostas (`GET /bets`, criação, voto, confirmação, disputa, cancelamento, resultado)
-  - `BackendAPIClient.swift` — cliente HTTP compartilhado e decode de coleções (`array`, `items`, `content`, `data`, `results`)
+   - `PhoneAuthRemoteDataSource.swift` — HTTP via `URLSession` + Combine; rotas `POST /users/login`, `POST /users/confirm`, `PUT /users/{id}`; define enum `PhoneLoginRawResult`
+   - `BackendUserRemoteDataSource.swift` — HTTP de usuários (`GET /users`, `GET /users/{id}`, `PUT /users/{id}`)
+   - `BackendParticipantRemoteDataSource.swift` — HTTP de participantes (`GET`, `POST`, `PATCH`)
+   - `BackendBetRemoteDataSource.swift` — HTTP de apostas (`GET /bets`, criação, voto, confirmação, disputa, cancelamento, resultado); detecta envelopes de erro do backend e lança `AppError` apropriado
+   - `BackendAPIClient.swift` — cliente HTTP compartilhado com método `decodeCollection(_:from:)` que resolve múltiplos formatos: array puro, envelopes com `items`/`content`/`data`/`results`, e busca em objetos aninhados
 - `Data/Session/` — ⚠️ *Novo*:
   - `SessionManager.swift` — Sessão local via `UserDefaults`; métodos `save(user:)`, `save(authSession:)`, `updateDisplayName(_:)`, `clear()`
 - `Data/DTOs/` — *Novos*:
-  - `BackendUserDTO.swift` — Resposta JSON do backend (id, name, phone, uuid, active, createdAt)
-  - `ParticipantBackendDTO.swift` — DTO de participantes no backend Java
-  - `BetBackendDTO.swift` — DTO de apostas com decode tolerante (string/número, campos opcionais, `athleteA`/`athleteB` objeto)
-  - `PhoneLoginRequestDTO.swift` — Body do `POST /users/login`
-  - `PhoneConfirmRequestDTO.swift` — Body do `POST /users/confirm`
-  - `UpdateUserProfileRequestDTO.swift` — Body do `PUT /users/{id}`
+   - `BackendUserDTO.swift` — Resposta JSON do backend (id, name, phone, uuid, active, createdAt)
+   - `ParticipantBackendDTO.swift` — DTO de participantes no backend Java
+   - `BetBackendDTO.swift` — DTO de apostas com decodificação totalmente flexível:
+     - `decodeFlexibleString(_:forKey:)` — aceita String, Int, Int64 ou Double
+     - `decodeFlexibleOptionalString(_:forKey:)` — versão opcional com fallback `nil`
+     - Todos os campos usam fallbacks seguros (nunca quebram por dados ausentes ou tipo inesperado)
+   - `PhoneLoginRequestDTO.swift` — Body do `POST /users/login`
+   - `PhoneConfirmRequestDTO.swift` — Body do `POST /users/confirm`
+   - `UpdateUserProfileRequestDTO.swift` — Body do `PUT /users/{id}`
 - `Data/Mappers/` — *Novo*:
   - `BackendUserMapper.swift` — Converte `BackendUserDTO` → `AppUser`
   - `ParticipantBackendMapper.swift` — Converte `ParticipantBackendDTO` → `Participant`
