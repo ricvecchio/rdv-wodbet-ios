@@ -58,15 +58,54 @@ final class BackendAPIClient {
     }
 
     func decodeCollection<T: Decodable>(_ type: T.Type, from data: Data) throws -> [T] {
+        // Se data vazio, retornar array vazio
+        if data.isEmpty {
+            return []
+        }
+
+        // Converter para string e verificar casos especiais
+        let bodyString = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        // Se body vazio, "null", "{}" ou "[]", retornar array vazio
+        if bodyString.isEmpty || bodyString == "null" || bodyString == "{}" {
+            return []
+        }
+
+        // Se for array vazio, retornar []
+        if bodyString == "[]" {
+            return []
+        }
+
+        // Verificar se é objeto de erro do backend antes de tentar decodificar
+        if let errorObject = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            // Se tem campos típicos de erro, lançar erro amigável
+            if errorObject["error"] != nil ||
+               errorObject["message"] != nil ||
+               errorObject["status"] != nil ||
+               errorObject["timestamp"] != nil ||
+               errorObject["path"] != nil {
+                if let message = errorObject["message"] as? String {
+                    throw AppError.network("Erro do servidor: \(message)")
+                }
+                if let error = errorObject["error"] as? String {
+                    throw AppError.network("Erro do servidor: \(error)")
+                }
+                throw AppError.network("Erro ao carregar dados do servidor.")
+            }
+        }
+
+        // Tentar decodificar como array simples
         if let array = try? JSONDecoder.backendDecoder.decode([T].self, from: data) {
             return array
         }
 
+        // Tentar decodificar como envelope com chaves conhecidas
         if let envelope = try? JSONDecoder.backendDecoder.decode(BackendCollectionEnvelope<T>.self, from: data),
            let resolved = envelope.resolvedItems {
             return resolved
         }
 
+        // Tentar decodificar escaneando JSONObject
         if let resolvedFromJSONObject = decodeCollectionFromJSONObject(type, from: data) {
             return resolvedFromJSONObject
         }

@@ -129,12 +129,12 @@ A aplicação é dividida em camadas, facilitando testes e evolução:
   - `FirebaseConfigurator.swift` — Inicialização do Firebase (`FirebaseApp.configure()`).
 - `Data/` — Implementações de acesso a dados
   - `Firebase/` — Data sources Firebase (`FirebaseAuthDataSource.swift`, `FirestoreUserDataSource.swift`, `FirestoreBetDataSource.swift`) — **preservados**.
-  - `Backend/` — ⚠️ *Novo (entrega acadêmica)*:
+- `Data/Backend/` — ⚠️ *Novo (entrega acadêmica)*:
     - `PhoneAuthRemoteDataSource.swift` — autenticação por telefone (`/users/login`, `/users/confirm`, `/users/{id}`).
     - `BackendUserRemoteDataSource.swift` — consumo de usuários (`/users`).
     - `BackendParticipantRemoteDataSource.swift` — consumo de participantes (`/participants`).
-    - `BackendBetRemoteDataSource.swift` — consumo de apostas (`/bets` e ações de aposta).
-    - `BackendAPIClient.swift` — cliente HTTP compartilhado + decode tolerante de coleções (array/envelope).
+    - `BackendBetRemoteDataSource.swift` — consumo de apostas (`/bets` e ações de aposta); **trata status 204 e respostas vazias como sucesso sem erro**.
+    - `BackendAPIClient.swift` — cliente HTTP compartilhado com decodificação robusta de coleções; **identifica respostas vazias (body vazio, "null", "{}") e retorna `[]` sem erro**; **detecta envelopes de erro backend e lança erro amigável**; suporta múltiplos formatos (array puro + envelopes `items`/`content`/`data`/`results`).
   - `Session/` — ⚠️ *Novo (entrega acadêmica)* — `SessionManager.swift` — persistência de sessão local via `UserDefaults`.
   - `Repositories/` — Implementações de repositórios backend e Firebase; inclui `PhoneAuthRepository.swift`, `BackendUserRepository.swift`, `BackendParticipantRepository.swift`, `BackendBetRepository.swift`.
   - `DTOs/` — `AppUserDTO`, `BetDTO` (Firebase) + `BackendUserDTO`, `ParticipantBackendDTO`, `BetBackendDTO`, `PhoneLoginRequestDTO`, `PhoneConfirmRequestDTO`, `UpdateUserProfileRequestDTO` (novos).
@@ -558,6 +558,20 @@ O app foi desenvolvido com máxima tolerância a variações de dados do backend
 - **Parsing de datas**: suporta ISO8601 com/sem fractional seconds, timestamps Unix, ou usa data atual como fallback
 - **Status e enums resilientes**: valores desconhecidos fazem fallback para padrões seguros (`.open` para status, `.water` para tipo de prêmio)
 
+#### ✨ Tratamento especial de respostas vazias (v2.0+)
+
+O app agora trata de forma robusta respostas vazias ou nulas do servidor, sem exibir erro:
+
+- **HTTP 204 (No Content)** → retorna array vazio `[]`
+- **HTTP 200 com body vazio** → retorna array vazio `[]`
+- **HTTP 200 com body `"null"`** → retorna array vazio `[]`
+- **HTTP 200 com body `"{}"`** → retorna array vazio `[]`
+- **HTTP 200 com body `"[]"`** → retorna array vazio `[]`
+- **HTTP 200 com envelope de erro backend** (contém campos `error`, `message`, `status`, `timestamp`, `path`) → detecta e lança erro amigável do servidor
+- **Somente erros HTTP reais** (4xx, 5xx) ou JSON de erro backend → exibe mensagem de erro
+
+**Resultado:** quando não há apostas, o app exibe apenas **"Nenhuma aposta por aqui ainda."** sem toast vermelho de erro.
+
 ### Cada card do feed mostra
 - Atletas envolvidos
 - WOD do dia
@@ -569,7 +583,9 @@ O app foi desenvolvido com máxima tolerância a variações de dados do backend
 ### Tratamento de respostas HTTP no feed
 
 - **HTTP 200 com array/envelope vazio**: exibe "Nenhuma aposta por aqui ainda." com opção de criar primeira aposta
-- **HTTP 200 com envelope de erro do backend**: detecta presença de campo `error` ou `message` e exibe a mensagem do servidor
+- **HTTP 204** (No Content): tratado como sucesso — exibe "Nenhuma aposta por aqui ainda."
+- **HTTP 200 com body vazio, "null", "{}" ou "[]"**: tratado como lista vazia — sem toast de erro
+- **HTTP 200 com envelope de erro do backend**: detecta presença de campo `error`, `message`, `status`, `timestamp` ou `path` e exibe a mensagem do servidor
 - **HTTP 200 com array válido**: carrega e exibe as apostas ordenadas por data (mais recentes primeiro)
 - **HTTP != 200**: exibe mensagem de erro apropriada via toast
 
@@ -750,7 +766,9 @@ O app já chama `FirebaseConfigurator.configure()` no `RDVWODBetApp` para inicia
 
 2. **Erro ao carregar o feed após login**
    - Confirme que o endpoint `GET /bets` retorna um array JSON válido (formato puro ou dentro de um envelope com chave `items`, `content`, `data` ou `results`).
-   - Se o backend retornar um envelope de erro com campos `error` e `message`, o app exibe a mensagem do servidor.
+   - Se o backend retorna lista vazia (status 204, body vazio, "null", "{}" ou "[]"), o app exibe "Nenhuma aposta por aqui ainda." **sem erro** ✅
+   - Se o backend retorna um envelope de erro com campos `error`, `message`, `status`, `timestamp` ou `path`, o app detecta e exibe a mensagem do servidor.
+   - **Para debug:** verifique os logs no console Xcode (impressão `print("GET /bets raw response:")`) para ver exatamente o que o backend está devolvendo. Esse log é temporário e aparece apenas em casos de parse falho.
 
 3. **Código de confirmação sempre retorna 404**
    - O backend pode não ter código gerado para esse telefone + uuid. Tente refazer o fluxo desde o início com o mesmo número.
@@ -783,8 +801,8 @@ O app já chama `FirebaseConfigurator.configure()` no `RDVWODBetApp` para inicia
    - `PhoneAuthRemoteDataSource.swift` — HTTP via `URLSession` + Combine; rotas `POST /users/login`, `POST /users/confirm`, `PUT /users/{id}`; define enum `PhoneLoginRawResult`
    - `BackendUserRemoteDataSource.swift` — HTTP de usuários (`GET /users`, `GET /users/{id}`, `PUT /users/{id}`)
    - `BackendParticipantRemoteDataSource.swift` — HTTP de participantes (`GET`, `POST`, `PATCH`)
-   - `BackendBetRemoteDataSource.swift` — HTTP de apostas (`GET /bets`, criação, voto, confirmação, disputa, cancelamento, resultado); detecta envelopes de erro do backend e lança `AppError` apropriado
-   - `BackendAPIClient.swift` — cliente HTTP compartilhado com método `decodeCollection(_:from:)` que resolve múltiplos formatos: array puro, envelopes com `items`/`content`/`data`/`results`, e busca em objetos aninhados
+   - `BackendBetRemoteDataSource.swift` — HTTP de apostas (`GET /bets`, criação, voto, confirmação, disputa, cancelamento, resultado); trata status 204 e respostas vazias como arrays vazios sem erro; detecta envelopes de erro do backend e lança `AppError` apropriado
+   - `BackendAPIClient.swift` — cliente HTTP compartilhado com método `decodeCollection(_:from:)` que resolve múltiplos formatos: array puro, envelopes com `items`/`content`/`data`/`results`, busca em objetos aninhados; **trata casos especiais de resposta vazia sem erro (body vazio, "null", "{}", "[]") e detecta envelopes de erro backend para lançar erro amigável**
 - `Data/Session/` — ⚠️ *Novo*:
   - `SessionManager.swift` — Sessão local via `UserDefaults`; métodos `save(user:)`, `save(authSession:)`, `updateDisplayName(_:)`, `clear()`
 - `Data/DTOs/` — *Novos*:
