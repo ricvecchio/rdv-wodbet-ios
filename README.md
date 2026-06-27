@@ -133,7 +133,7 @@ A aplicação é dividida em camadas, facilitando testes e evolução:
     - `PhoneAuthRemoteDataSource.swift` — autenticação por telefone (`/users/login`, `/users/confirm`, `/users/{id}`).
     - `BackendUserRemoteDataSource.swift` — consumo de usuários (`/users`).
     - `BackendParticipantRemoteDataSource.swift` — consumo de participantes (`/participants`).
-    - `BackendBetRemoteDataSource.swift` — consumo de apostas (`/bets` e ações de aposta); **trata status 204 e respostas vazias como sucesso sem erro**.
+    - `BackendBetRemoteDataSource.swift` — consumo de apostas (`/bets` e ações de aposta); **trata status 204 e respostas vazias como sucesso sem erro**; no `GET /bets`, quando o body bruto é `[]`, `""`, `"null"` ou `"{}"`, retorna `[]` imediatamente (sem mapper/erro).
     - `BackendAPIClient.swift` — cliente HTTP compartilhado com decodificação robusta de coleções; **identifica respostas vazias (body vazio, "null", "{}") e retorna `[]` sem erro**; **detecta envelopes de erro backend e lança erro amigável**; suporta múltiplos formatos (array puro + envelopes `items`/`content`/`data`/`results`/`bets`/`values`/`list`/`records`) e fallback para qualquer array no primeiro nível do JSON.
   - `Session/` — ⚠️ *Novo (entrega acadêmica)* — `SessionManager.swift` — persistência de sessão local via `UserDefaults`.
   - `Repositories/` — Implementações de repositórios backend e Firebase; inclui `PhoneAuthRepository.swift`, `BackendUserRepository.swift`, `BackendParticipantRepository.swift`, `BackendBetRepository.swift`.
@@ -774,7 +774,12 @@ O app já chama `FirebaseConfigurator.configure()` no `RDVWODBetApp` para inicia
    - Confirme que o endpoint `GET /bets` retorna um array JSON válido (formato puro ou dentro de envelopes como `items`, `content`, `data`, `results`, `bets`, `values`, `list` ou `records`).
    - Se o backend retorna lista vazia (status 204, body vazio, "null", "{}" ou "[]"), o app exibe "Nenhuma aposta por aqui ainda." **sem erro** ✅
    - Se o backend retorna um envelope de erro com campos `error`, `message`, `status`, `timestamp` ou `path`, o app detecta e exibe a mensagem do servidor.
-   - **Para debug:** verifique os logs no console Xcode (`print("GET /bets status: ...")` e `print("❌ decodeCollection failed. Raw response:")`) para ver status e payload bruto em caso de falha de parse.
+   - **Para debug:** verifique os logs temporários no console Xcode:
+     - `print("GET /bets status: ...")`
+     - `print("GET /bets raw:", raw ?? "nil")`
+     - `print("fetchBets count:", bets.count)`
+     - `print("feed loaded bets:", bets.count)`
+     - `print("❌ decodeCollection failed. Raw response:")`
 
 3. **Código de confirmação sempre retorna 404**
    - O backend pode não ter código gerado para esse telefone + uuid. Tente refazer o fluxo desde o início com o mesmo número.
@@ -807,7 +812,7 @@ O app já chama `FirebaseConfigurator.configure()` no `RDVWODBetApp` para inicia
    - `PhoneAuthRemoteDataSource.swift` — HTTP via `URLSession` + Combine; rotas `POST /users/login`, `POST /users/confirm`, `PUT /users/{id}`; define enum `PhoneLoginRawResult`
    - `BackendUserRemoteDataSource.swift` — HTTP de usuários (`GET /users`, `GET /users/{id}`, `PUT /users/{id}`)
    - `BackendParticipantRemoteDataSource.swift` — HTTP de participantes (`GET`, `POST`, `PATCH`)
-   - `BackendBetRemoteDataSource.swift` — HTTP de apostas (`GET /bets`, criação, voto, confirmação, disputa, cancelamento, resultado); trata status 204 e respostas vazias como arrays vazios sem erro; detecta envelopes de erro do backend e lança `AppError` apropriado
+   - `BackendBetRemoteDataSource.swift` — HTTP de apostas (`GET /bets`, criação, voto, confirmação, disputa, cancelamento, resultado); trata status 204 e respostas vazias como arrays vazios sem erro; no `GET /bets`, `[]`, `""`, `"null"` e `"{}"` retornam `[]` imediatamente; detecta envelopes de erro do backend e lança `AppError` apropriado
    - `BackendAPIClient.swift` — cliente HTTP compartilhado com método `decodeCollection(_:from:)` que resolve múltiplos formatos: array puro, envelopes com `items`/`content`/`data`/`results`/`bets`/`values`/`list`/`records`, busca em objetos aninhados e fallback para qualquer array no primeiro nível; **trata casos especiais de resposta vazia sem erro (body vazio, "null", "{}", "[]") e detecta envelopes de erro backend para lançar erro amigável**
 - `Data/Session/` — ⚠️ *Novo*:
   - `SessionManager.swift` — Sessão local via `UserDefaults`; métodos `save(user:)`, `save(authSession:)`, `updateDisplayName(_:)`, `clear()`

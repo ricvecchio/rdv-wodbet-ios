@@ -39,8 +39,14 @@ final class FeedViewModel: ObservableObject {
             } receiveValue: { [weak self] bets, users in
                 guard let self else { return }
 
+                print("feed loaded bets:", bets.count)
                 self.errorMessage = nil
                 self.usersById = Dictionary(uniqueKeysWithValues: users.map { ($0.id, $0) })
+                if bets.isEmpty {
+                    self.bets = []
+                    return
+                }
+
                 self.bets = bets.sorted(by: { $0.createdAt > $1.createdAt })
             }
             .store(in: &cancellables)

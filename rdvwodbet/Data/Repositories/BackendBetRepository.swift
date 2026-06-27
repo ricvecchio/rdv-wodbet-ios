@@ -11,7 +11,14 @@ final class BackendBetRepository: BetRepository {
     func observeBets() -> AnyPublisher<[Bet], AppError> {
         remoteDataSource.fetchBets()
             .map { dtos in
-                dtos.map { BackendBetMapper.toDomain($0) }
+                if dtos.isEmpty {
+                    print("fetchBets count:", 0)
+                    return []
+                }
+
+                let bets = dtos.map { BackendBetMapper.toDomain($0) }
+                print("fetchBets count:", bets.count)
+                return bets
             }
             .eraseToAnyPublisher()
     }

@@ -16,6 +16,10 @@ final class BackendBetRemoteDataSource {
                 print("GET /bets status: \(response.statusCode)")
                 print(String(data: data, encoding: .utf8) ?? "sem body")
 
+                let raw = String(data: data, encoding: .utf8)?
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                print("GET /bets raw:", raw ?? "nil")
+
                 // Tratar status 204 (No Content) como sucesso com lista vazia
                 if response.statusCode == 204 {
                     return []
@@ -23,6 +27,10 @@ final class BackendBetRemoteDataSource {
 
                 guard response.statusCode == 200 else {
                     throw BackendAPIClient.error(for: response.statusCode)
+                }
+
+                if raw == "[]" || raw == "" || raw == "null" || raw == "{}" {
+                    return []
                 }
 
                 // Tentativa de decodificar diretamente como array vazio

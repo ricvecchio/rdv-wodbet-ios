@@ -94,9 +94,11 @@ final class BackendAPIClient {
             }
         }
 
-        // Tentar decodificar como array simples
-        if let array = try? JSONDecoder.backendDecoder.decode([T].self, from: data) {
-            return array
+        // Decodificação direta da coleção (inclui suporte natural a "[]")
+        do {
+            return try JSONDecoder.backendDecoder.decode([T].self, from: data)
+        } catch {
+            // Continua para formatos alternativos de envelope.
         }
 
         // Tentar decodificar como envelope com chaves conhecidas
