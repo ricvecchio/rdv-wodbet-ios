@@ -76,22 +76,22 @@ struct BetBackendDTO: Decodable {
         let proposedWinnerRef = try container.decodeIfPresent(BetUserReferenceDTO.self, forKey: .proposedWinner)
         let confirmedWinnerRef = try container.decodeIfPresent(BetUserReferenceDTO.self, forKey: .confirmedWinner)
 
-        id = (try? decodeStringFromStringOrNumber(container, forKey: .id)) ?? UUID().uuidString
+        id = (try? Self.decodeStringFromStringOrNumber(container, forKey: .id)) ?? UUID().uuidString
         createdByUserId = try (
-            decodeOptionalStringFromStringOrNumber(container, forKey: .createdByUserId)
-            ?? decodeOptionalStringFromStringOrNumber(container, forKey: .created_by_user_id)
+            Self.decodeOptionalStringFromStringOrNumber(container, forKey: .createdByUserId)
+            ?? Self.decodeOptionalStringFromStringOrNumber(container, forKey: .created_by_user_id)
             ?? createdByRef?.resolvedUserId
             ?? ""
         )
         athleteAUserId = try (
-            decodeOptionalStringFromStringOrNumber(container, forKey: .athleteAUserId)
-            ?? decodeOptionalStringFromStringOrNumber(container, forKey: .athlete_a_user_id)
+            Self.decodeOptionalStringFromStringOrNumber(container, forKey: .athleteAUserId)
+            ?? Self.decodeOptionalStringFromStringOrNumber(container, forKey: .athlete_a_user_id)
             ?? athleteARef?.resolvedUserId
             ?? ""
         )
         athleteBUserId = try (
-            decodeOptionalStringFromStringOrNumber(container, forKey: .athleteBUserId)
-            ?? decodeOptionalStringFromStringOrNumber(container, forKey: .athlete_b_user_id)
+            Self.decodeOptionalStringFromStringOrNumber(container, forKey: .athleteBUserId)
+            ?? Self.decodeOptionalStringFromStringOrNumber(container, forKey: .athlete_b_user_id)
             ?? athleteBRef?.resolvedUserId
             ?? ""
         )
@@ -113,28 +113,28 @@ struct BetBackendDTO: Decodable {
         status = (try container.decodeIfPresent(String.self, forKey: .status))?.trimmedNonEmpty ?? BetStatus.open.rawValue
 
         winnerUserId = try (
-            decodeOptionalStringFromStringOrNumber(container, forKey: .winnerUserId)
-            ?? decodeOptionalStringFromStringOrNumber(container, forKey: .winner_user_id)
+            Self.decodeOptionalStringFromStringOrNumber(container, forKey: .winnerUserId)
+            ?? Self.decodeOptionalStringFromStringOrNumber(container, forKey: .winner_user_id)
             ?? winnerRef?.resolvedUserId
         )
         proposedWinnerUserId = try (
-            decodeOptionalStringFromStringOrNumber(container, forKey: .proposedWinnerUserId)
-            ?? decodeOptionalStringFromStringOrNumber(container, forKey: .proposed_winner_user_id)
+            Self.decodeOptionalStringFromStringOrNumber(container, forKey: .proposedWinnerUserId)
+            ?? Self.decodeOptionalStringFromStringOrNumber(container, forKey: .proposed_winner_user_id)
             ?? proposedWinnerRef?.resolvedUserId
         )
         confirmedWinnerUserId = try (
-            decodeOptionalStringFromStringOrNumber(container, forKey: .confirmedWinnerUserId)
-            ?? decodeOptionalStringFromStringOrNumber(container, forKey: .confirmed_winner_user_id)
+            Self.decodeOptionalStringFromStringOrNumber(container, forKey: .confirmedWinnerUserId)
+            ?? Self.decodeOptionalStringFromStringOrNumber(container, forKey: .confirmed_winner_user_id)
             ?? confirmedWinnerRef?.resolvedUserId
         )
 
         athleteAConfirmed =
-            decodeOptionalBool(container, forKey: .athleteAConfirmed)
-            ?? decodeOptionalBool(container, forKey: .athlete_a_confirmed)
+            Self.decodeOptionalBool(container, forKey: .athleteAConfirmed)
+            ?? Self.decodeOptionalBool(container, forKey: .athlete_a_confirmed)
             ?? false
         athleteBConfirmed =
-            decodeOptionalBool(container, forKey: .athleteBConfirmed)
-            ?? decodeOptionalBool(container, forKey: .athlete_b_confirmed)
+            Self.decodeOptionalBool(container, forKey: .athleteBConfirmed)
+            ?? Self.decodeOptionalBool(container, forKey: .athlete_b_confirmed)
             ?? false
 
         athleteAResult = try (
@@ -154,14 +154,14 @@ struct BetBackendDTO: Decodable {
             ?? container.decodeIfPresent(String.self, forKey: .expires_at)?.trimmedNonEmpty
         )
 
-        votesByUserId = decodeVotesByUserId(from: container)
+        votesByUserId = Self.decodeVotesByUserId(from: container)
     }
 
-    private func decodeStringFromStringOrNumber(
+    private static func decodeStringFromStringOrNumber(
         _ container: KeyedDecodingContainer<CodingKeys>,
         forKey key: CodingKeys
     ) throws -> String {
-        guard let value = try decodeOptionalStringFromStringOrNumber(container, forKey: key) else {
+        guard let value = try Self.decodeOptionalStringFromStringOrNumber(container, forKey: key) else {
             throw DecodingError.keyNotFound(
                 key,
                 DecodingError.Context(codingPath: container.codingPath, debugDescription: "Campo ausente: \(key.stringValue)")
@@ -170,7 +170,7 @@ struct BetBackendDTO: Decodable {
         return value
     }
 
-    private func decodeOptionalStringFromStringOrNumber(
+    private static func decodeOptionalStringFromStringOrNumber(
         _ container: KeyedDecodingContainer<CodingKeys>,
         forKey key: CodingKeys
     ) throws -> String? {
@@ -186,7 +186,7 @@ struct BetBackendDTO: Decodable {
         return nil
     }
 
-    private func decodeOptionalBool(
+    private static func decodeOptionalBool(
         _ container: KeyedDecodingContainer<CodingKeys>,
         forKey key: CodingKeys
     ) -> Bool? {
@@ -206,20 +206,20 @@ struct BetBackendDTO: Decodable {
         return nil
     }
 
-    private func decodeVotesByUserId(from container: KeyedDecodingContainer<CodingKeys>) -> [String: String] {
-        if let votes = decodeVotes(for: .votesByUserId, from: container) {
+    private static func decodeVotesByUserId(from container: KeyedDecodingContainer<CodingKeys>) -> [String: String] {
+        if let votes = Self.decodeVotes(for: .votesByUserId, from: container) {
             return votes
         }
-        if let votes = decodeVotes(for: .votes_by_user_id, from: container) {
+        if let votes = Self.decodeVotes(for: .votes_by_user_id, from: container) {
             return votes
         }
-        if let votes = decodeVotes(for: .votes, from: container) {
+        if let votes = Self.decodeVotes(for: .votes, from: container) {
             return votes
         }
         return [:]
     }
 
-    private func decodeVotes(
+    private static func decodeVotes(
         for key: CodingKeys,
         from container: KeyedDecodingContainer<CodingKeys>
     ) -> [String: String]? {
@@ -353,4 +353,3 @@ struct BackendUpdateBetResultRequestDTO: Encodable {
     let athleteBResult: String
     let winnerUserId: String
 }
-
