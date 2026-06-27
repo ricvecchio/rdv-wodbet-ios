@@ -13,8 +13,7 @@ final class BackendBetRemoteDataSource {
     func fetchBets() -> AnyPublisher<[BetBackendDTO], AppError> {
         client.request(path: "bets", method: "GET")
             .tryMap { data, response -> [BetBackendDTO] in
-                // Log temporário completo
-                print("GET /bets raw response:")
+                print("GET /bets status: \(response.statusCode)")
                 print(String(data: data, encoding: .utf8) ?? "sem body")
 
                 // Tratar status 204 (No Content) como sucesso com lista vazia

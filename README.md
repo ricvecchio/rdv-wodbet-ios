@@ -134,7 +134,7 @@ A aplicação é dividida em camadas, facilitando testes e evolução:
     - `BackendUserRemoteDataSource.swift` — consumo de usuários (`/users`).
     - `BackendParticipantRemoteDataSource.swift` — consumo de participantes (`/participants`).
     - `BackendBetRemoteDataSource.swift` — consumo de apostas (`/bets` e ações de aposta); **trata status 204 e respostas vazias como sucesso sem erro**.
-    - `BackendAPIClient.swift` — cliente HTTP compartilhado com decodificação robusta de coleções; **identifica respostas vazias (body vazio, "null", "{}") e retorna `[]` sem erro**; **detecta envelopes de erro backend e lança erro amigável**; suporta múltiplos formatos (array puro + envelopes `items`/`content`/`data`/`results`).
+    - `BackendAPIClient.swift` — cliente HTTP compartilhado com decodificação robusta de coleções; **identifica respostas vazias (body vazio, "null", "{}") e retorna `[]` sem erro**; **detecta envelopes de erro backend e lança erro amigável**; suporta múltiplos formatos (array puro + envelopes `items`/`content`/`data`/`results`/`bets`/`values`/`list`/`records`) e fallback para qualquer array no primeiro nível do JSON.
   - `Session/` — ⚠️ *Novo (entrega acadêmica)* — `SessionManager.swift` — persistência de sessão local via `UserDefaults`.
   - `Repositories/` — Implementações de repositórios backend e Firebase; inclui `PhoneAuthRepository.swift`, `BackendUserRepository.swift`, `BackendParticipantRepository.swift`, `BackendBetRepository.swift`.
   - `DTOs/` — `AppUserDTO`, `BetDTO` (Firebase) + `BackendUserDTO`, `ParticipantBackendDTO`, `BetBackendDTO`, `PhoneLoginRequestDTO`, `PhoneConfirmRequestDTO`, `UpdateUserProfileRequestDTO` (novos).
@@ -545,7 +545,7 @@ Tela principal do aplicativo.
 
 O app foi desenvolvido com máxima tolerância a variações de dados do backend:
 
-- **Múltiplos formatos de envelope**: reconhece respostas como array puro, ou envelopados em `items`, `content`, `data`, `results`, ou estruturas aninhadas
+- **Múltiplos formatos de envelope**: reconhece respostas como array puro, ou envelopados em `items`, `content`, `data`, `results`, `bets`, `values`, `list`, `records`, além de estruturas aninhadas
 - **Flexibilidade de tipos**: IDs aceitam `String`, `Int`, `Int64` ou `Double`, convertidos automaticamente
 - **Campos opcionais com fallbacks**: todos os campos não críticos usam defaults seguros:
   - `id` → gera UUID se ausente
@@ -567,8 +567,14 @@ O app agora trata de forma robusta respostas vazias ou nulas do servidor, sem ex
 - **HTTP 200 com body `"null"`** → retorna array vazio `[]`
 - **HTTP 200 com body `"{}"`** → retorna array vazio `[]`
 - **HTTP 200 com body `"[]"`** → retorna array vazio `[]`
+- **HTTP 200 com body `{"bets":[]}` ou `{"content":[]}`** → retorna array vazio `[]`
 - **HTTP 200 com envelope de erro backend** (contém campos `error`, `message`, `status`, `timestamp`, `path`) → detecta e lança erro amigável do servidor
 - **Somente erros HTTP reais** (4xx, 5xx) ou JSON de erro backend → exibe mensagem de erro
+
+Quando a coleção não pode ser interpretada, o app registra no console:
+
+- `❌ decodeCollection failed. Raw response:`
+- body bruto da resposta para diagnóstico
 
 **Resultado:** quando não há apostas, o app exibe apenas **"Nenhuma aposta por aqui ainda."** sem toast vermelho de erro.
 
@@ -765,10 +771,10 @@ O app já chama `FirebaseConfigurator.configure()` no `RDVWODBetApp` para inicia
    - Verifique a exceção ATS no `Info.plist` se estiver usando `http://`.
 
 2. **Erro ao carregar o feed após login**
-   - Confirme que o endpoint `GET /bets` retorna um array JSON válido (formato puro ou dentro de um envelope com chave `items`, `content`, `data` ou `results`).
+   - Confirme que o endpoint `GET /bets` retorna um array JSON válido (formato puro ou dentro de envelopes como `items`, `content`, `data`, `results`, `bets`, `values`, `list` ou `records`).
    - Se o backend retorna lista vazia (status 204, body vazio, "null", "{}" ou "[]"), o app exibe "Nenhuma aposta por aqui ainda." **sem erro** ✅
    - Se o backend retorna um envelope de erro com campos `error`, `message`, `status`, `timestamp` ou `path`, o app detecta e exibe a mensagem do servidor.
-   - **Para debug:** verifique os logs no console Xcode (impressão `print("GET /bets raw response:")`) para ver exatamente o que o backend está devolvendo. Esse log é temporário e aparece apenas em casos de parse falho.
+   - **Para debug:** verifique os logs no console Xcode (`print("GET /bets status: ...")` e `print("❌ decodeCollection failed. Raw response:")`) para ver status e payload bruto em caso de falha de parse.
 
 3. **Código de confirmação sempre retorna 404**
    - O backend pode não ter código gerado para esse telefone + uuid. Tente refazer o fluxo desde o início com o mesmo número.
@@ -802,7 +808,7 @@ O app já chama `FirebaseConfigurator.configure()` no `RDVWODBetApp` para inicia
    - `BackendUserRemoteDataSource.swift` — HTTP de usuários (`GET /users`, `GET /users/{id}`, `PUT /users/{id}`)
    - `BackendParticipantRemoteDataSource.swift` — HTTP de participantes (`GET`, `POST`, `PATCH`)
    - `BackendBetRemoteDataSource.swift` — HTTP de apostas (`GET /bets`, criação, voto, confirmação, disputa, cancelamento, resultado); trata status 204 e respostas vazias como arrays vazios sem erro; detecta envelopes de erro do backend e lança `AppError` apropriado
-   - `BackendAPIClient.swift` — cliente HTTP compartilhado com método `decodeCollection(_:from:)` que resolve múltiplos formatos: array puro, envelopes com `items`/`content`/`data`/`results`, busca em objetos aninhados; **trata casos especiais de resposta vazia sem erro (body vazio, "null", "{}", "[]") e detecta envelopes de erro backend para lançar erro amigável**
+   - `BackendAPIClient.swift` — cliente HTTP compartilhado com método `decodeCollection(_:from:)` que resolve múltiplos formatos: array puro, envelopes com `items`/`content`/`data`/`results`/`bets`/`values`/`list`/`records`, busca em objetos aninhados e fallback para qualquer array no primeiro nível; **trata casos especiais de resposta vazia sem erro (body vazio, "null", "{}", "[]") e detecta envelopes de erro backend para lançar erro amigável**
 - `Data/Session/` — ⚠️ *Novo*:
   - `SessionManager.swift` — Sessão local via `UserDefaults`; métodos `save(user:)`, `save(authSession:)`, `updateDisplayName(_:)`, `clear()`
 - `Data/DTOs/` — *Novos*:

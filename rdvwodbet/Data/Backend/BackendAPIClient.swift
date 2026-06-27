@@ -110,10 +110,8 @@ final class BackendAPIClient {
             return resolvedFromJSONObject
         }
 
-        // Log temporário para debugging: exibir o corpo da resposta que falhou ao decodificar
-        let responseBody = String(data: data, encoding: .utf8) ?? "sem body"
-        print("GET collection raw response:")
-        print(responseBody)
+        print("❌ decodeCollection failed. Raw response:")
+        print(String(data: data, encoding: .utf8) ?? "sem body")
 
         throw AppError.network("Não foi possível interpretar a lista retornada pelo servidor.")
     }
@@ -126,8 +124,23 @@ final class BackendAPIClient {
             return nil
         }
 
+        if dictionary.isEmpty {
+            return []
+        }
+
         if let collection = decodeCollection(type, from: dictionary) {
             return collection
+        }
+
+        // Fallback: qualquer array no primeiro nível pode conter a coleção.
+        for (_, value) in dictionary {
+            guard let rawArray = value as? [Any],
+                  JSONSerialization.isValidJSONObject(rawArray),
+                  let rawData = try? JSONSerialization.data(withJSONObject: rawArray),
+                  let decoded = try? JSONDecoder.backendDecoder.decode([T].self, from: rawData) else {
+                continue
+            }
+            return decoded
         }
 
         for key in BackendCollectionEnvelope<T>.allCollectionKeys {
@@ -185,13 +198,17 @@ private struct BackendCollectionEnvelope<Element: Decodable>: Decodable {
     let content: [Element]?
     let data: [Element]?
     let results: [Element]?
+    let bets: [Element]?
+    let values: [Element]?
+    let list: [Element]?
+    let records: [Element]?
 
     var resolvedItems: [Element]? {
-        items ?? content ?? data ?? results
+        items ?? content ?? data ?? results ?? bets ?? values ?? list ?? records
     }
 
     static var allCollectionKeys: [String] {
-        ["items", "content", "data", "results"]
+        ["items", "content", "data", "results", "bets", "values", "list", "records"]
     }
 }
 
