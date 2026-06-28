@@ -11,9 +11,9 @@ enum AppError: Error, LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .invalidInput(let msg): return msg
-        case .notAuthenticated: return "Você precisa estar logado."
-        case .permissionDenied: return "Você não tem permissão para essa ação."
-        case .dataNotFound: return "Dados não encontrados."
+        case .notAuthenticated: return "Sessão inválida. Faça login novamente."
+        case .permissionDenied: return "Você não possui permissão para essa ação."
+        case .dataNotFound: return "Registro não encontrado."
         case .network(let msg): return msg
         case .unknown: return "Ocorreu um erro inesperado."
         }

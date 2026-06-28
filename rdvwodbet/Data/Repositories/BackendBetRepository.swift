@@ -1,45 +1,50 @@
 import Foundation
 import Combine
 
-final class FirestoreBetRepository: BetRepository {
-    private let dataSource: FirestoreBetDataSource
+final class BackendBetRepository: BetRepository {
+    private let remoteDataSource: BackendBetRemoteDataSource
 
-    init(dataSource: FirestoreBetDataSource) {
-        self.dataSource = dataSource
+    init(remoteDataSource: BackendBetRemoteDataSource) {
+        self.remoteDataSource = remoteDataSource
     }
 
     func observeBets() -> AnyPublisher<[Bet], AppError> {
-        dataSource.observeBets()
+        remoteDataSource.fetchBets()
             .map { dtos in
-                dtos.map { BetMapper.toDomain($0) }
+                if dtos.isEmpty {
+                    print("fetchBets count:", 0)
+                    return []
+                }
+
+                let bets = dtos.map { BackendBetMapper.toDomain($0) }
+                print("fetchBets count:", bets.count)
+                return bets
             }
             .eraseToAnyPublisher()
     }
 
     func createBet(_ bet: Bet) -> AnyPublisher<Void, AppError> {
-        dataSource.createBet(betId: bet.id, data: BetMapper.toFirestore(bet))
+        remoteDataSource.createBet(bet)
     }
 
     func proposeWinner(betId: String, requesterUserId: String, proposedWinnerUserId: String) -> AnyPublisher<Void, AppError> {
-        dataSource.setBet(betId: betId, data: [
-            "proposedWinnerUserId": proposedWinnerUserId,
-            "athleteAConfirmed": false,
-            "athleteBConfirmed": false,
-            "status": BetStatus.open.rawValue,
-            "confirmedWinnerUserId": NSNull()
-        ])
+        remoteDataSource.proposeWinner(
+            betId: betId,
+            requesterUserId: requesterUserId,
+            proposedWinnerUserId: proposedWinnerUserId
+        )
     }
 
     func confirmWinner(betId: String, confirmerUserId: String) -> AnyPublisher<Void, AppError> {
-        dataSource.confirmWinnerTransaction(betId: betId, confirmerUserId: confirmerUserId)
+        remoteDataSource.confirmWinner(betId: betId, confirmerUserId: confirmerUserId)
     }
 
     func rejectWinner(betId: String, rejectorUserId: String) -> AnyPublisher<Void, AppError> {
-        dataSource.rejectWinnerTransaction(betId: betId, rejectorUserId: rejectorUserId)
+        remoteDataSource.rejectWinner(betId: betId, rejectorUserId: rejectorUserId)
     }
 
     func cancelBet(betId: String, requesterUserId: String) -> AnyPublisher<Void, AppError> {
-        dataSource.cancelBetTransaction(betId: betId, requesterUserId: requesterUserId)
+        remoteDataSource.cancelBet(betId: betId, requesterUserId: requesterUserId)
     }
 
     func updateBetResult(
@@ -49,7 +54,7 @@ final class FirestoreBetRepository: BetRepository {
         athleteBResult: String,
         winnerUserId: String
     ) -> AnyPublisher<Void, AppError> {
-        dataSource.updateBetResultTransaction(
+        remoteDataSource.updateBetResult(
             betId: betId,
             requesterUserId: requesterUserId,
             athleteAResult: athleteAResult,
@@ -59,10 +64,11 @@ final class FirestoreBetRepository: BetRepository {
     }
 
     func voteOnBet(betId: String, voterUserId: String, votedAthleteUserId: String) -> AnyPublisher<Void, AppError> {
-        dataSource.voteOnBetTransaction(
+        remoteDataSource.voteOnBet(
             betId: betId,
             voterUserId: voterUserId,
             votedAthleteUserId: votedAthleteUserId
         )
     }
 }
+

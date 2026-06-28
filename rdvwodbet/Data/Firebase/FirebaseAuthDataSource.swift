@@ -3,7 +3,7 @@ import FirebaseAuth
 import Combine
 
 // MARK: - Firebase Auth Error → mensagem amigável em pt-BR
-
+ 
 private func firebaseAuthErrorMessage(_ error: Error) -> String {
     let nsError = error as NSError
     guard let code = AuthErrorCode(rawValue: nsError.code) else {

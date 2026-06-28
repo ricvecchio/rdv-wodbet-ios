@@ -8,7 +8,11 @@ final class ProposeWinnerUseCase {
         self.betRepository = betRepository
     }
 
-    func execute(betId: String, proposedWinnerUserId: String) -> AnyPublisher<Void, AppError> {
-        betRepository.proposeWinner(betId: betId, proposedWinnerUserId: proposedWinnerUserId)
+    func execute(betId: String, requesterUserId: String, proposedWinnerUserId: String) -> AnyPublisher<Void, AppError> {
+        betRepository.proposeWinner(
+            betId: betId,
+            requesterUserId: requesterUserId,
+            proposedWinnerUserId: proposedWinnerUserId
+        )
     }
 }

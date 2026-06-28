@@ -152,7 +152,9 @@ struct FeedView: View {
                 title: "Deslogar",
                 systemImage: "rectangle.portrait.and.arrow.right"
             ) {
-                try? container.authRepository.signOut()
+                // ⚠️ ENTREGA ACADÊMICA: logout via SessionManager (backend).
+                // Para restaurar Firebase: try? container.authRepository.signOut()
+                container.sessionManager.clear()
             }
 
             footerButton(
